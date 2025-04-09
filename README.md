@@ -1,5 +1,15 @@
 # Trino MCP Server in Go
 
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/tuannvm/mcp-trino/main.yml?branch=main&label=CI%2FCD&logo=github)](https://github.com/tuannvm/mcp-trino/actions/workflows/main.yml)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/tuannvm/mcp-trino?logo=go)](https://github.com/tuannvm/mcp-trino/blob/main/go.mod)
+[![Trivy Scan](https://github.com/tuannvm/mcp-trino/actions/workflows/main.yml/badge.svg?label=Trivy%20Security%20Scan)](https://github.com/tuannvm/mcp-trino/actions/workflows/main.yml)
+[![SLSA 3](https://slsa.dev/images/gh-badge-level3.svg)](https://slsa.dev)
+[![Go Report Card](https://goreportcard.com/badge/github.com/tuannvm/mcp-trino)](https://goreportcard.com/report/github.com/tuannvm/mcp-trino)
+[![Go Reference](https://pkg.go.dev/badge/github.com/tuannvm/mcp-trino.svg)](https://pkg.go.dev/github.com/tuannvm/mcp-trino)
+[![Docker Image](https://img.shields.io/badge/Docker-GHCR-blue?logo=docker)](https://github.com/tuannvm/mcp-trino/pkgs/container/mcp-trino)
+[![GitHub Release](https://img.shields.io/github/v/release/tuannvm/mcp-trino)](https://github.com/tuannvm/mcp-trino/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Model Context Protocol (MCP) server for Trino, reimplemented in Go.
 
 ## Overview
@@ -42,6 +52,32 @@ make build
 
 This MCP server can be integrated with several AI applications:
 
+### Using Docker Image
+
+To use the Docker image instead of a local binary:
+
+```json
+{
+  "mcpServers": {
+    "mcp-trino": {
+      "command": "docker",
+      "args": ["run", "--rm", "-i", 
+               "-e", "TRINO_HOST=<HOST>", 
+               "-e", "TRINO_PORT=<PORT>",
+               "-e", "TRINO_USER=<USERNAME>",
+               "-e", "TRINO_PASSWORD=<PASSWORD>",
+               "-e", "TRINO_SCHEME=http",
+               "ghcr.io/tuannvm/mcp-trino:latest"],
+      "env": {}
+    }
+  }
+}
+```
+
+> **Note**: The `host.docker.internal` special DNS name allows the container to connect to services running on the host machine. If your Trino server is running elsewhere, replace with the appropriate host.
+
+This Docker configuration can be used in any of the below applications.
+
 ### Cursor
 
 To use with [Cursor](https://cursor.sh/), create or edit `~/.cursor/mcp.json`:
@@ -53,10 +89,10 @@ To use with [Cursor](https://cursor.sh/), create or edit `~/.cursor/mcp.json`:
       "command": "/path/to/mcp-trino",
       "args": [],
       "env": {
-        "TRINO_HOST": "localhost",
-        "TRINO_PORT": "8080",
-        "TRINO_USER": "trino",
-        "TRINO_PASSWORD": ""
+        "TRINO_HOST": "<HOST>",
+        "TRINO_PORT": "<PORT>",
+        "TRINO_USER": "<USERNAME>",
+        "TRINO_PASSWORD": "<PASSWORD>"
       }
     }
   }
@@ -79,10 +115,10 @@ To use with [Claude Desktop](https://claude.ai/desktop), edit your Claude config
       "command": "/path/to/mcp-trino",
       "args": [],
       "env": {
-        "TRINO_HOST": "localhost",
-        "TRINO_PORT": "8080",
-        "TRINO_USER": "trino",
-        "TRINO_PASSWORD": ""
+        "TRINO_HOST": "<HOST>",
+        "TRINO_PORT": "<PORT>",
+        "TRINO_USER": "<USERNAME>",
+        "TRINO_PASSWORD": "<PASSWORD>"
       }
     }
   }
@@ -102,10 +138,10 @@ To use with [Windsurf](https://windsurf.com/refer?referral_code=sjqdvqozgx2wyi7r
       "command": "/path/to/mcp-trino",
       "args": [],
       "env": {
-        "TRINO_HOST": "localhost",
-        "TRINO_PORT": "8080",
-        "TRINO_USER": "trino",
-        "TRINO_PASSWORD": ""
+        "TRINO_HOST": "<HOST>",
+        "TRINO_PORT": "<PORT>",
+        "TRINO_USER": "<USERNAME>",
+        "TRINO_PASSWORD": "<PASSWORD>"
       }
     }
   }
@@ -128,10 +164,10 @@ To use with [ChatWise](https://chatwise.app?atp=uo1wzc), follow these steps:
    - Args: (leave empty)
    - Env: Add the following environment variables:
      ```
-     TRINO_HOST=localhost
-     TRINO_PORT=8080
-     TRINO_USER=trino
-     TRINO_PASSWORD=
+     TRINO_HOST=<HOST>
+     TRINO_PORT=<PORT>
+     TRINO_USER=<USERNAME>
+     TRINO_PASSWORD=<PASSWORD>
      ```
 
 Alternatively, you can import the configuration from JSON:
@@ -144,10 +180,10 @@ Alternatively, you can import the configuration from JSON:
          "command": "/path/to/mcp-trino",
          "args": [],
          "env": {
-           "TRINO_HOST": "localhost",
-           "TRINO_PORT": "8080",
-           "TRINO_USER": "trino",
-           "TRINO_PASSWORD": ""
+           "TRINO_HOST": "<HOST>",
+           "TRINO_PORT": "<PORT>",
+           "TRINO_USER": "<USERNAME>",
+           "TRINO_PASSWORD": "<PASSWORD>"
          }
        }
      }
@@ -241,6 +277,41 @@ MIT
 ## CI/CD and Releases
 
 This project uses GitHub Actions for continuous integration and GoReleaser for automated releases.
+
+### Continuous Integration Checks
+
+Our CI pipeline performs the following checks on all PRs and commits to the main branch:
+
+#### Code Quality
+- **Linting**: Using golangci-lint to check for common code issues and style violations
+- **Go Module Verification**: Ensuring go.mod and go.sum are properly maintained
+- **Formatting**: Verifying code is properly formatted with gofmt
+
+#### Security
+- **Vulnerability Scanning**: Using govulncheck to check for known vulnerabilities in dependencies
+- **Dependency Scanning**: Using Trivy to scan for vulnerabilities in dependencies (CRITICAL, HIGH, and MEDIUM)
+- **SBOM Generation**: Creating a Software Bill of Materials for dependency tracking
+- **SLSA Provenance**: Creating verifiable build provenance for supply chain security
+
+#### Testing
+- **Unit Tests**: Running tests with race detection and code coverage reporting
+- **Build Verification**: Ensuring the codebase builds successfully
+
+#### CI/CD Security
+- **Least Privilege**: Workflows run with minimum required permissions
+- **Pinned Versions**: All GitHub Actions use specific versions to prevent supply chain attacks
+- **Dependency Updates**: Automated dependency updates via Dependabot
+
+### Release Process
+
+When changes are merged to the main branch:
+
+1. CI checks are run to validate code quality and security
+2. If successful, a new release is automatically created with:
+   - Semantic versioning based on commit messages
+   - Binary builds for multiple platforms
+   - Docker image publishing to GitHub Container Registry
+   - SBOM and provenance attestation
 
 ### Makefile Commands
 

@@ -8,6 +8,12 @@ on:
       - ".github/ISSUE_TEMPLATE/**"
       - ".gitignore"
 
+permissions:
+  contents: read
+  packages: write
+  id-token: write # Required for SLSA provenance
+  security-events: write # Required for uploading security results
+
 env:
   GO_VERSION: "1.24"
   REGISTRY: ghcr.io
@@ -28,6 +34,7 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
+          check-latest: true
 
       - name: Install dependencies
         run: |
@@ -62,6 +69,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -75,35 +84,48 @@ jobs:
           govulncheck ./...
 
       - name: Run dependency scan
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.17.0
         with:
           scan-type: "fs"
           scan-ref: "."
           format: "sarif"
           output: "trivy-results.sarif"
-          severity: "CRITICAL,HIGH"
+          severity: "CRITICAL,HIGH,MEDIUM"
+          timeout: "10m"
 
       - name: Upload security scan results
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: "trivy-results.sarif"
+          
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          format: spdx-json
+          output-file: sbom.spdx.json
+          
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.spdx.json
+          retention-days: 30
 
   test:
     name: Test
     runs-on: ubuntu-latest
     needs: verify
-    strategy:
-      matrix:
-        go-version: ["1.24"]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version: ${{ env.GO_VERSION }}
           cache: true
 
       - name: Run tests
@@ -132,9 +154,13 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
+      # SLSA provenance generator
+      - name: Install SLSA generator
+        uses: slsa-framework/slsa-github-generator/actions/delegator/installer@v2.0.0
+      
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
@@ -143,17 +169,17 @@ jobs:
             latest
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
@@ -161,3 +187,5 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          provenance: true
+          sbom: true
