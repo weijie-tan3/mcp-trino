@@ -1,0 +1,123 @@
+name: Release
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    branches: [main]
+    types:
+      - completed
+
+permissions:
+  contents: write # Required for creating GitHub releases
+  packages: write # Required for pushing to GitHub Container Registry
+
+jobs:
+  release:
+    # Only run if the CI workflow was successful
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Required for version calculation
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ">=1.19"
+          cache: true
+
+      - name: Calculate Version
+        id: calculate_version
+        run: |
+          # Start at 1.0.0 if no tags exist
+          LATEST_TAG=$(git tag -l 'v*' | sort -V | tail -n 1)
+          if [ -z "$LATEST_TAG" ]; then
+            NEW_VERSION="1.0.0"
+          else
+            # Strip the 'v' prefix
+            CURRENT_VERSION=${LATEST_TAG#v}
+            # Split into major, minor, patch
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+            # Increment patch version
+            PATCH=$((PATCH + 1))
+            NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          fi
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Calculated new version: v$NEW_VERSION"
+
+      - name: Create Tag
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag -a v${{ steps.calculate_version.outputs.version }} -m "Release v${{ steps.calculate_version.outputs.version }}"
+          git push origin v${{ steps.calculate_version.outputs.version }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Debug step - show GoReleaser version and config
+      - name: Debug GoReleaser Config
+        run: |
+          echo "Repository: ${{ github.repository }}"
+          echo "Repository Owner: ${{ github.repository_owner }}"
+          echo "GitHub Actor: ${{ github.actor }}"
+          cat .goreleaser.yml
+          echo "---"
+          echo "Building release for version v${{ steps.calculate_version.outputs.version }}"
+          echo "GITHUB_TOKEN permissions: ${{ toJson(github.token_permissions) }}"
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v4
+        with:
+          # Use a specific version of GoReleaser instead of "latest" for better reliability
+          version: v1.18.2  # This is a known stable version
+          distribution: goreleaser
+          # Only use the clean flag, which is supported in all versions
+          args: release --clean
+        env:
+          # Ensure all environment variables are properly set
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+          GORELEASER_CURRENT_TAG: v${{ steps.calculate_version.outputs.version }}
+          
+      # Fallback manual release in case GoReleaser fails to upload assets
+      - name: Build Binaries Manually (Fallback)
+        id: manual_build
+        if: failure()
+        run: |
+          echo "GoReleaser may have failed, building binaries manually as fallback"
+          # Create a directory for the binaries
+          mkdir -p dist/binaries
+          # Build for different platforms
+          GOOS=linux GOARCH=amd64 go build -o dist/binaries/mcp-trino-linux-amd64 ./cmd/server
+          GOOS=darwin GOARCH=amd64 go build -o dist/binaries/mcp-trino-darwin-amd64 ./cmd/server
+          GOOS=windows GOARCH=amd64 go build -o dist/binaries/mcp-trino-windows-amd64.exe ./cmd/server
+          # Create archives
+          cd dist/binaries
+          tar -czf mcp-trino-linux-amd64.tar.gz mcp-trino-linux-amd64
+          tar -czf mcp-trino-darwin-amd64.tar.gz mcp-trino-darwin-amd64
+          zip mcp-trino-windows-amd64.zip mcp-trino-windows-amd64.exe
+          cd ../..
+          ls -la dist/binaries
+          echo "manual_build=true" >> $GITHUB_OUTPUT
+
+      - name: Create Manual GitHub Release (Fallback)
+        if: steps.manual_build.outputs.manual_build == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: v${{ steps.calculate_version.outputs.version }}
+          name: Release v${{ steps.calculate_version.outputs.version }}
+          draft: false
+          prerelease: false
+          files: |
+            dist/binaries/mcp-trino-linux-amd64.tar.gz
+            dist/binaries/mcp-trino-darwin-amd64.tar.gz
+            dist/binaries/mcp-trino-windows-amd64.zip
