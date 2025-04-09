@@ -104,7 +104,7 @@ Example `mcp.json` for Cursor IDE:
 ```json
 {
 	"mcpServers": {
-		"mcp-liftoff-trino-adhoc": {
+		"mcp-trino-adhoc": {
 			"command": "mcp-trino",
 			"args": [],
 			"env": {
