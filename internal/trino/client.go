@@ -20,14 +20,16 @@ type Client struct {
 
 // NewClient creates a new Trino client
 func NewClient(cfg *config.TrinoConfig) (*Client, error) {
-	dsn := fmt.Sprintf("%s://%s:%s@%s:%d?catalog=%s&schema=%s&SSL=true&SSLInsecure=true",
+	dsn := fmt.Sprintf("%s://%s:%s@%s:%d?catalog=%s&schema=%s&SSL=%t&SSLInsecure=%t",
 		cfg.Scheme,
 		cfg.User,
 		cfg.Password,
 		cfg.Host,
 		cfg.Port,
 		cfg.Catalog,
-		cfg.Schema)
+		cfg.Schema,
+		cfg.SSL,
+		cfg.SSLInsecure)
 
 	// The Trino driver registers itself with database/sql on import
 	// We can just use sql.Open directly with the trino driver
