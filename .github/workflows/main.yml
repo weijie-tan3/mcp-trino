@@ -15,7 +15,7 @@ on:
       - ".gitignore"
 
 env:
-  GO_VERSION: "1.21"
+  GO_VERSION: "1.24"
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
@@ -98,7 +98,7 @@ jobs:
     needs: verify
     strategy:
       matrix:
-        go-version: ["1.19", "1.20", "1.21"]
+        go-version: ["1.24"]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
