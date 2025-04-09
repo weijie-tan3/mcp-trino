@@ -1,13 +1,7 @@
-name: Main Workflow
+name: Main Branch CI/CD
 
 on:
   push:
-    branches: [main]
-    paths-ignore:
-      - "**.md"
-      - ".github/ISSUE_TEMPLATE/**"
-      - ".gitignore"
-  pull_request:
     branches: [main]
     paths-ignore:
       - "**.md"
@@ -54,6 +48,9 @@ jobs:
         with:
           version: latest
           args: --timeout=5m
+          install-mode: binary
+          skip-pkg-cache: true
+          skip-build-cache: true
 
       - name: Run linters
         run: golangci-lint run --out-format=colored-line-number
@@ -119,9 +116,8 @@ jobs:
           flags: unittests
           fail_ci_if_error: false
 
-  build:
-    name: Build
-    if: github.event_name != 'pull_request'
+  build-and-publish:
+    name: Build and Publish
     needs: [test, security]
     runs-on: ubuntu-latest
     steps:

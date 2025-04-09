@@ -5,12 +5,14 @@ on:
     branches: ["**"] # Run on all branches
 
 jobs:
-  lint:
-    name: Lint
+  verify:
+    name: Verify
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v4
@@ -18,14 +20,10 @@ jobs:
           go-version: ">=1.24"
           cache: true
 
-      - name: Install golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest
-          args: --timeout=5m
-
-      - name: Run golangci-lint
-        run: golangci-lint run --out-format=colored-line-number
+      - name: Install dependencies
+        run: |
+          go mod download
+          go mod verify
 
       - name: Check Go mod tidy
         run: |
@@ -36,9 +34,22 @@ jobs:
             exit 1
           fi
 
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          args: --timeout=5m
+          install-mode: binary
+          skip-pkg-cache: true
+          skip-build-cache: true
+
+      - name: Run linters
+        run: golangci-lint run --out-format=colored-line-number
+
   security:
     name: Security Scan
     runs-on: ubuntu-latest
+    needs: verify
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -64,8 +75,9 @@ jobs:
           severity: "CRITICAL,HIGH"
 
   test:
-    name: Unit Tests
+    name: Tests
     runs-on: ubuntu-latest
+    needs: verify
     strategy:
       matrix:
         go-version: ["1.24"]
@@ -86,3 +98,20 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage.txt
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [verify, security]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ">=1.24"
+          cache: true
+
+      - name: Build
+        run: go build -v ./...
