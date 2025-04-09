@@ -25,9 +25,9 @@ func NewTrinoConfig() *TrinoConfig {
 	ssl, _ := strconv.ParseBool(getEnv("TRINO_SSL", "true"))
 	sslInsecure, _ := strconv.ParseBool(getEnv("TRINO_SSL_INSECURE", "true"))
 	scheme := getEnv("TRINO_SCHEME", "https")
-	
+
 	// If using HTTPS, force SSL to true
-	if strings.ToLower(scheme) == "https" {
+	if strings.EqualFold(scheme, "https") {
 		ssl = true
 	}
 
