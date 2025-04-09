@@ -2,7 +2,7 @@ name: Release
 
 on:
   workflow_run:
-    workflows: ["Main Workflow"]
+    workflows: ["Main Branch CI/CD"]
     branches: [main]
     types:
       - completed

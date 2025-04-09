@@ -4,9 +4,9 @@ Model Context Protocol (MCP) server for Trino, reimplemented in Go.
 
 ## Overview
 
-This project is a reimplementation of the Trino MCP Server in Go using the MCP SDK from [mark3labs/mcp-go](https://github.com/mark3labs/mcp-go). It enables AI models to access Trino's distributed SQL query engine through the Model Context Protocol.
+This project implements a Model Context Protocol (MCP) server for Trino in Go. It enables AI assistants to access Trino's distributed SQL query engine through standardized MCP tools.
 
-Trino (formerly known as PrestoSQL) is a powerful distributed SQL query engine designed for fast analytics on large datasets, particularly beneficial in the adtech industry.
+Trino (formerly PrestoSQL) is a powerful distributed SQL query engine designed for fast analytics on large datasets.
 
 ## Features
 
@@ -14,8 +14,8 @@ Trino (formerly known as PrestoSQL) is a powerful distributed SQL query engine d
 - ✅ Trino SQL query execution through MCP tools
 - ✅ Catalog, schema, and table discovery
 - ✅ Docker container support
-- ✅ Reliable STDIO transport for LLM integration
-- ✅ HTTP API endpoints for querying
+- ✅ Supports both STDIO and HTTP transports
+- ✅ Compatible with Cursor, Claude Desktop, Windsurf, ChatWise, and any MCP-compatible clients.
 
 ## Prerequisites
 
@@ -35,26 +35,177 @@ cd mcp-trino
 2. Build the server:
 
 ```bash
-./scripts/build.sh
+make build
 ```
 
-## Usage
+## MCP Integration
 
-### Standalone Usage
+This MCP server can be integrated with several AI applications:
+
+### Cursor
+
+To use with [Cursor](https://cursor.sh/), create or edit `~/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "mcp-trino": {
+      "command": "/path/to/mcp-trino",
+      "args": [],
+      "env": {
+        "TRINO_HOST": "localhost",
+        "TRINO_PORT": "8080",
+        "TRINO_USER": "trino",
+        "TRINO_PASSWORD": ""
+      }
+    }
+  }
+}
+```
+
+Replace the path and environment variables with your specific Trino configuration.
+
+### Claude Desktop
+
+To use with [Claude Desktop](https://claude.ai/desktop), edit your Claude configuration file:
+
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "mcp-trino": {
+      "command": "/path/to/mcp-trino",
+      "args": [],
+      "env": {
+        "TRINO_HOST": "localhost",
+        "TRINO_PORT": "8080",
+        "TRINO_USER": "trino",
+        "TRINO_PASSWORD": ""
+      }
+    }
+  }
+}
+```
+
+After updating the configuration, restart Claude Desktop. You should see the MCP tools available in the tools menu.
+
+### Windsurf
+
+To use with [Windsurf](https://windsurf.com/refer?referral_code=sjqdvqozgx2wyi7r), create or edit your `mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "mcp-trino": {
+      "command": "/path/to/mcp-trino",
+      "args": [],
+      "env": {
+        "TRINO_HOST": "localhost",
+        "TRINO_PORT": "8080",
+        "TRINO_USER": "trino",
+        "TRINO_PASSWORD": ""
+      }
+    }
+  }
+}
+```
+
+Restart Windsurf to apply the changes. The Trino MCP tools will be available to the Cascade AI.
+
+### ChatWise
+
+To use with [ChatWise](https://chatwise.app?atp=uo1wzc), follow these steps:
+
+1. Open ChatWise and go to Settings
+2. Navigate to the Tools section
+3. Click the "+" icon to add a new tool
+4. Select "Command Line MCP"
+5. Configure with the following details:
+   - ID: `mcp-trino` (or any name you prefer)
+   - Command: `/path/to/mcp-trino` (full path to the mcp-trino binary)
+   - Args: (leave empty)
+   - Env: Add the following environment variables:
+     ```
+     TRINO_HOST=localhost
+     TRINO_PORT=8080
+     TRINO_USER=trino
+     TRINO_PASSWORD=
+     ```
+
+Alternatively, you can import the configuration from JSON:
+
+1. Copy this JSON to your clipboard:
+   ```json
+   {
+     "mcpServers": {
+       "mcp-trino": {
+         "command": "/path/to/mcp-trino",
+         "args": [],
+         "env": {
+           "TRINO_HOST": "localhost",
+           "TRINO_PORT": "8080",
+           "TRINO_USER": "trino",
+           "TRINO_PASSWORD": ""
+         }
+       }
+     }
+   }
+   ```
+2. In ChatWise Settings > Tools, click the "+" icon
+3. Select "Import JSON from Clipboard"
+4. Toggle the switch next to the tool to enable it
+
+Once enabled, click the hammer icon below the input box in ChatWise to access Trino MCP tools.
+
+## Available MCP Tools
+
+The server provides the following MCP tools:
+
+1. `execute_query` - Execute a SQL query against Trino
+2. `list_catalogs` - List all catalogs available in the Trino server
+3. `list_schemas` - List all schemas in a catalog
+4. `list_tables` - List all tables in a schema
+5. `get_table_schema` - Get the schema of a table
+
+## Configuration
+
+The server can be configured using the following environment variables:
+
+| Variable           | Description                   | Default   |
+| ------------------ | ----------------------------- | --------- |
+| TRINO_HOST         | Trino server hostname         | localhost |
+| TRINO_PORT         | Trino server port             | 8080      |
+| TRINO_USER         | Trino user                    | trino     |
+| TRINO_PASSWORD     | Trino password                | (empty)   |
+| TRINO_CATALOG      | Default catalog               | memory    |
+| TRINO_SCHEMA       | Default schema                | default   |
+| TRINO_SCHEME       | Connection scheme (http/https)| https     |
+| TRINO_SSL          | Enable SSL                    | true      |
+| TRINO_SSL_INSECURE | Allow insecure SSL            | true      |
+| MCP_TRANSPORT      | Transport method (stdio/http) | stdio     |
+| MCP_PORT           | HTTP port for http transport  | 9097      |
+
+> **Note**: When `TRINO_SCHEME` is set to "https", `TRINO_SSL` is automatically set to true regardless of the provided value.
+
+> **Important**: The default connection mode is HTTPS. If you're using an HTTP-only Trino server, you must set `TRINO_SCHEME=http` in your environment variables.
+
+## Standalone Usage
 
 Run the server with STDIO transport (for direct LLM integration):
 
 ```bash
-./scripts/run.sh
+./bin/mcp-trino
 ```
 
 Or with HTTP transport:
 
 ```bash
-MCP_TRANSPORT=http MCP_PORT=9097 ./scripts/run.sh
+MCP_TRANSPORT=http MCP_PORT=9097 ./bin/mcp-trino
 ```
 
-### Docker Usage
+## Docker Usage
 
 Start the server with Docker Compose:
 
@@ -70,77 +221,17 @@ curl -X POST "http://localhost:9097/api/query" \
      -d '{"query": "SELECT 1 AS test"}'
 ```
 
-## MCP Tools
-
-The server provides the following MCP tools:
-
-1. `execute_query` - Execute a SQL query against Trino
-2. `list_catalogs` - List all catalogs available in the Trino server
-3. `list_schemas` - List all schemas in a catalog
-4. `list_tables` - List all tables in a schema
-5. `get_table_schema` - Get the schema of a table
-
-## Configuration
-
-The server can be configured using the following environment variables:
-
-| Variable       | Description                   | Default   |
-| -------------- | ----------------------------- | --------- |
-| TRINO_HOST     | Trino server hostname         | localhost |
-| TRINO_PORT     | Trino server port             | 8080      |
-| TRINO_USER     | Trino user                    | trino     |
-| TRINO_PASSWORD | Trino password                | (empty)   |
-| TRINO_CATALOG  | Default catalog               | memory    |
-| TRINO_SCHEMA   | Default schema                | default   |
-| MCP_TRANSPORT  | Transport method (stdio/http) | stdio     |
-| MCP_PORT       | HTTP port for http transport  | 9097      |
-
-### Using `mcp.json`
-
-You can integrate this MCP server with Cursor IDE by configuring the `mcp.json` file in your Cursor IDE settings directory (typically `~/.cursor/`).
-
-Example `mcp.json` for Cursor IDE:
-
-```json
-{
-	"mcpServers": {
-		"mcp-trino-adhoc": {
-			"command": "mcp-trino",
-			"args": [],
-			"env": {
-				"TRINO_HOST": "<HOST>",
-				"TRINO_PORT": "<PORT>",
-				"TRINO_USER": "<USER>",
-				"TRINO_PASSWORD": "<PASSWORD>",
-			}
-		}
-	}
-}
-```
-
-Replace the placeholders:
-- `<HOST>`: Your Trino server hostname
-- `<PORT>`: Your Trino server port
-- `<USER>`: Your Trino username
-- `<PASSWORD>`: Your Trino password
-
-After configuring this file, Cursor's AI assistant will be able to directly query your Trino database using natural language.
-
-**Note:** When using the MCP server standalone, environment variables will override the settings specified in the `mcp.json` file if both are present.
-
 ## Development
 
-1. Setup Go environment
-2. Install dependencies:
-
 ```bash
+# Install dependencies
 go mod download
-```
 
-3. Run tests:
-
-```bash
+# Run tests
 go test ./...
+
+# Run linters
+make lint
 ```
 
 ## License
@@ -151,38 +242,7 @@ MIT
 
 This project uses GitHub Actions for continuous integration and GoReleaser for automated releases.
 
-### Continuous Integration
-
-The CI pipeline runs automatically on pushes and pull requests to the main branch, performing:
-- Static code analysis with golangci-lint
-- Go dependency verification 
-- Build validation
-- Test execution with code coverage reporting
-
-All CI checks must pass before a PR can be merged to the main branch. The repository is configured with branch protection rules to enforce this requirement.
-
-### Release Process
-
-The project uses an automated release process with a sequential workflow:
-
-1. When changes are merged to the `main` branch, the CI workflow runs first to validate the code.
-
-2. After the CI workflow completes successfully, the release workflow automatically:
-   - Calculates the next version (starting from 1.0.0 and incrementing)
-   - Creates and pushes a new version tag
-   - Builds binaries for multiple platforms (named "mcp-trino")
-   - Creates and pushes Docker images to GitHub Container Registry (ghcr.io)
-   - Publishes all binaries and assets to GitHub Releases
-
-You can find:
-- Released binaries at: `https://github.com/tuannvm/mcp-trino/releases`
-- Docker images at: `ghcr.io/tuannvm/mcp-trino:latest` or `ghcr.io/tuannvm/mcp-trino:v1.0.0`
-
-No manual version tagging is required - just merge your changes to `main` and the release will be created automatically.
-
-### Makefile
-
-For convenience, a Makefile is provided with common development commands:
+### Makefile Commands
 
 ```bash
 # Build the application
@@ -200,14 +260,10 @@ make clean
 # Run in development mode
 make run-dev
 
-# Test GoReleaser locally (creates snapshot)
+# Test GoReleaser locally
 make release-snapshot
 
-# Run the application
-make run
-
-# Docker operations
-make run-docker          # Build and run in Docker
-make docker-compose-up   # Start with Docker Compose
-make docker-compose-down # Stop Docker Compose services
+# Run with Docker
+make docker-compose-up
+make docker-compose-down
 ```
