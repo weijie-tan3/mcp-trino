@@ -15,7 +15,7 @@ Trino (formerly PrestoSQL) is a powerful distributed SQL query engine designed f
 - ✅ Catalog, schema, and table discovery
 - ✅ Docker container support
 - ✅ Supports both STDIO and HTTP transports
-- ✅ Compatible with Cursor, Claude Desktop, and Windsurf
+- ✅ Compatible with Cursor, Claude Desktop, Windsurf, ChatWise, and any MCP-compatible clients.
 
 ## Prerequisites
 
@@ -93,7 +93,7 @@ After updating the configuration, restart Claude Desktop. You should see the MCP
 
 ### Windsurf
 
-To use with [Windsurf](https://windsurf.ai/), create or edit your `mcp_config.json`:
+To use with [Windsurf](https://windsurf.com/refer?referral_code=sjqdvqozgx2wyi7r), create or edit your `mcp_config.json`:
 
 ```json
 {
@@ -132,7 +132,6 @@ To use with [ChatWise](https://chatwise.app?atp=uo1wzc), follow these steps:
      TRINO_PORT=8080
      TRINO_USER=trino
      TRINO_PASSWORD=
-     TRINO_SCHEME=https
      ```
 
 Alternatively, you can import the configuration from JSON:
@@ -148,8 +147,7 @@ Alternatively, you can import the configuration from JSON:
            "TRINO_HOST": "localhost",
            "TRINO_PORT": "8080",
            "TRINO_USER": "trino",
-           "TRINO_PASSWORD": "",
-           "TRINO_SCHEME": "https"
+           "TRINO_PASSWORD": ""
          }
        }
      }
@@ -175,17 +173,23 @@ The server provides the following MCP tools:
 
 The server can be configured using the following environment variables:
 
-| Variable       | Description                   | Default   |
-| -------------- | ----------------------------- | --------- |
-| TRINO_HOST     | Trino server hostname         | localhost |
-| TRINO_PORT     | Trino server port             | 8080      |
-| TRINO_USER     | Trino user                    | trino     |
-| TRINO_PASSWORD | Trino password                | (empty)   |
-| TRINO_CATALOG  | Default catalog               | memory    |
-| TRINO_SCHEMA   | Default schema                | default   |
-| TRINO_SCHEME   | Connection scheme (http/https)| https     |
-| MCP_TRANSPORT  | Transport method (stdio/http) | stdio     |
-| MCP_PORT       | HTTP port for http transport  | 9097      |
+| Variable           | Description                   | Default   |
+| ------------------ | ----------------------------- | --------- |
+| TRINO_HOST         | Trino server hostname         | localhost |
+| TRINO_PORT         | Trino server port             | 8080      |
+| TRINO_USER         | Trino user                    | trino     |
+| TRINO_PASSWORD     | Trino password                | (empty)   |
+| TRINO_CATALOG      | Default catalog               | memory    |
+| TRINO_SCHEMA       | Default schema                | default   |
+| TRINO_SCHEME       | Connection scheme (http/https)| https     |
+| TRINO_SSL          | Enable SSL                    | true      |
+| TRINO_SSL_INSECURE | Allow insecure SSL            | true      |
+| MCP_TRANSPORT      | Transport method (stdio/http) | stdio     |
+| MCP_PORT           | HTTP port for http transport  | 9097      |
+
+> **Note**: When `TRINO_SCHEME` is set to "https", `TRINO_SSL` is automatically set to true regardless of the provided value.
+
+> **Important**: The default connection mode is HTTPS. If you're using an HTTP-only Trino server, you must set `TRINO_SCHEME=http` in your environment variables.
 
 ## Standalone Usage
 
