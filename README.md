@@ -19,7 +19,7 @@ Trino (formerly known as PrestoSQL) is a powerful distributed SQL query engine d
 
 ## Prerequisites
 
-- Go 1.19 or later
+- Go 1.24 or later
 - Docker and Docker Compose (for containerized usage)
 - A running Trino server (or use the provided Docker setup)
 
