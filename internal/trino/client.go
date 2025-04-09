@@ -20,7 +20,8 @@ type Client struct {
 
 // NewClient creates a new Trino client
 func NewClient(cfg *config.TrinoConfig) (*Client, error) {
-	dsn := fmt.Sprintf("https://%s:%s@%s:%d?catalog=%s&schema=%s&SSL=true&SSLInsecure=true",
+	dsn := fmt.Sprintf("%s://%s:%s@%s:%d?catalog=%s&schema=%s&SSL=true&SSLInsecure=true",
+		cfg.Scheme,
 		cfg.User,
 		cfg.Password,
 		cfg.Host,

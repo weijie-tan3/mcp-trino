@@ -13,6 +13,7 @@ type TrinoConfig struct {
 	Password string
 	Catalog  string
 	Schema   string
+	Scheme   string
 }
 
 // NewTrinoConfig creates a new TrinoConfig with values from environment variables or defaults
@@ -26,6 +27,7 @@ func NewTrinoConfig() *TrinoConfig {
 		Password: getEnv("TRINO_PASSWORD", ""),
 		Catalog:  getEnv("TRINO_CATALOG", "memory"),
 		Schema:   getEnv("TRINO_SCHEMA", "default"),
+		Scheme:   getEnv("TRINO_SCHEME", "https"),
 	}
 }
 
