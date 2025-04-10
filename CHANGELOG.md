@@ -1,3 +1,11 @@
+# [1.2.0](https://github.com/tuannvm/mcp-trino/compare/v1.1.0...v1.2.0) (2025-04-10)
+
+
+### Features
+
+* **_config.yml:** Update GitHub release URLs and add custom links ([bfdd0f7](https://github.com/tuannvm/mcp-trino/commit/bfdd0f7e824eead1ac5e62a6ac6f628189adc8b8))
+* **README:** Add MCP tools documentation ([9e22108](https://github.com/tuannvm/mcp-trino/commit/9e221080790a750f09b67225e2f9c5d6937f3501))
+
 # [1.1.0](https://github.com/tuannvm/mcp-trino/compare/v1.0.4...v1.1.0) (2025-04-10)
 
 
