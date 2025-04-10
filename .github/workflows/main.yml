@@ -54,13 +54,13 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
-          args: --timeout=5m --out-format=colored-line-number
+          args: --timeout=5m --output-format=colored-line-number
           install-mode: binary
           skip-pkg-cache: true
           skip-build-cache: true
 
       - name: Run linters
-        run: golangci-lint run --out-format=colored-line-number
+        run: golangci-lint run --output-format=colored-line-number
 
   security:
     name: Security Scan
@@ -156,7 +156,7 @@ jobs:
 
       # SLSA provenance generator
       - name: Install SLSA generator
-        uses: slsa-framework/slsa-github-generator/actions/delegator/installer@v2.0.0
+        uses: slsa-framework/slsa-github-generator/actions/installer@v2.0.0
       
       - name: Docker meta
         id: meta
