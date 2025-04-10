@@ -46,7 +46,7 @@ linters:
 issues:
   max-issues-per-linter: 0 # Unlimited
   max-same-issues: 0 # Unlimited
-  exclude-rules:
+  exclude:
     # Exclude gosec and noctx checks in test files
     - path: _test\.go
       linters:
