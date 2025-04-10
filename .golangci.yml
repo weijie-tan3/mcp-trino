@@ -1,7 +1,9 @@
+# Define the configuration version
+version: "2"
+
 run:
   timeout: 5m
-  output:
-    format: colored-line-number
+  modules-download-mode: readonly
 
 linters:
   enable:
@@ -22,30 +24,31 @@ linters:
     - bodyclose
     - noctx
     - unconvert
-
-linters-settings:
-  gocyclo:
-    min-complexity: 15
-  revive:
-    rules:
-      - name: exported
-  gosec:
-    excludes:
-      - G204
-      - G112
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - style
-      - performance
-      - opinionated
-    disabled-checks:
-      - exitAfterDefer
+  # Settings for specific linters are nested here
+  settings:
+    gocyclo:
+      min-complexity: 15
+    revive:
+      rules:
+        - name: exported
+    gosec:
+      excludes:
+        - G204 # Recommend avoiding shell command execution with variable input
+        - G112 # Potential slowloris attack vulnerability
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - style
+        - performance
+        - opinionated
+      disabled-checks:
+        - exitAfterDefer # Sometimes necessary in command-line tools
 
 issues:
-  max-issues-per-linter: 0
-  max-same-issues: 0
+  max-issues-per-linter: 0 # Unlimited
+  max-same-issues: 0 # Unlimited
   exclude-rules:
+    # Exclude gosec and noctx checks in test files
     - path: _test\.go
       linters:
         - gosec
