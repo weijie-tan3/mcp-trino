@@ -1,5 +1,7 @@
 # Trino MCP Server in Go
 
+A high-performance Model Context Protocol (MCP) server for Trino implemented in Go. This project enables AI assistants to seamlessly interact with Trino's distributed SQL query engine through standardized MCP tools.
+
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/tuannvm/mcp-trino/build.yml?branch=main&label=CI%2FCD&logo=github)](https://github.com/tuannvm/mcp-trino/actions/workflows/build.yml)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/tuannvm/mcp-trino?logo=go)](https://github.com/tuannvm/mcp-trino/blob/main/go.mod)
 [![Trivy Scan](https://img.shields.io/github/actions/workflow/status/tuannvm/mcp-trino/build.yml?branch=main&label=Trivy%20Security%20Scan&logo=aquasec)](https://github.com/tuannvm/mcp-trino/actions/workflows/build.yml)
@@ -10,7 +12,19 @@
 [![GitHub Release](https://img.shields.io/github/v/release/tuannvm/mcp-trino?sort=semver)](https://github.com/tuannvm/mcp-trino/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Model Context Protocol (MCP) server for Trino, reimplemented in Go.
+## Downloads
+
+You can download pre-built binaries for your platform:
+
+| Platform | Architecture | Download Link |
+|----------|--------------|---------------|
+| macOS | x86_64 (Intel) | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-darwin-amd64) |
+| macOS | ARM64 (Apple Silicon) | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-darwin-arm64) |
+| Linux | x86_64 | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-linux-amd64) |
+| Linux | ARM64 | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-linux-arm64) |
+| Windows | x86_64 | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-windows-amd64.exe) |
+
+Or see all available downloads on the [GitHub Releases](https://github.com/tuannvm/mcp-trino/releases) page.
 
 ## Overview
 
@@ -199,11 +213,25 @@ Once enabled, click the hammer icon below the input box in ChatWise to access Tr
 
 The server provides the following MCP tools:
 
-1. `execute_query` - Execute a SQL query against Trino
-2. `list_catalogs` - List all catalogs available in the Trino server
-3. `list_schemas` - List all schemas in a catalog
-4. `list_tables` - List all tables in a schema
-5. `get_table_schema` - Get the schema of a table
+### execute_query
+
+Execute a SQL query against Trino with full SQL support for complex analytical queries.
+
+### list_catalogs
+
+List all catalogs available in the Trino server, providing a comprehensive view of your data ecosystem.
+
+### list_schemas
+
+List all schemas in a catalog, helping you navigate through the data hierarchy efficiently.
+
+### list_tables
+
+List all tables in a schema, giving you visibility into available datasets.
+
+### get_table_schema
+
+Get the schema of a table, understanding the structure of your data for better query planning.
 
 ## Configuration
 
@@ -270,9 +298,13 @@ go test ./...
 make lint
 ```
 
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
 ## License
 
-MIT
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## CI/CD and Releases
 
