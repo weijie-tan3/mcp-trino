@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trino MCP Server in Go</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Trino MCP Server</h1>
+            <p class="subtitle">A Model Context Protocol (MCP) server for Trino implemented in Go</p>
+            <div class="buttons">
+                <a href="https://github.com/tuannvm/mcp-trino" class="btn primary"><i class="fab fa-github"></i> GitHub</a>
+                <a href="https://github.com/tuannvm/mcp-trino#installation" class="btn secondary"><i class="fas fa-download"></i> Installation</a>
+            </div>
+            <div class="badges">
+                <img src="https://img.shields.io/github/actions/workflow/status/tuannvm/mcp-trino/build.yml?branch=main&label=CI%2FCD&logo=github" alt="GitHub Workflow Status">
+                <img src="https://img.shields.io/github/go-mod/go-version/tuannvm/mcp-trino?logo=go" alt="Go Version">
+                <img src="https://img.shields.io/github/v/release/tuannvm/mcp-trino?sort=semver" alt="GitHub Release">
+                <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT">
+            </div>
+        </div>
+    </header>
+
+    <section class="overview">
+        <div class="container">
+            <h2>Project Overview</h2>
+            <p>
+                This project implements a Model Context Protocol (MCP) server for Trino in Go. It enables AI assistants to access 
+                Trino's distributed SQL query engine through standardized MCP tools. Trino (formerly PrestoSQL) is a powerful 
+                distributed SQL query engine designed for fast analytics on large datasets.
+            </p>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <i class="fas fa-server"></i>
+                    <h3>MCP Server</h3>
+                    <p>Full MCP server implementation in Go</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-database"></i>
+                    <h3>SQL Execution</h3>
+                    <p>Execute Trino SQL queries through MCP tools</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-search"></i>
+                    <h3>Schema Discovery</h3>
+                    <p>Catalog, schema, and table exploration</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fab fa-docker"></i>
+                    <h3>Container Support</h3>
+                    <p>Docker-ready for easy deployment</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-network-wired"></i>
+                    <h3>Multiple Transports</h3>
+                    <p>Supports both STDIO and HTTP transports</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-robot"></i>
+                    <h3>AI Integration</h3>
+                    <p>Compatible with Cursor, Claude Desktop, and more</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="integration">
+        <div class="container">
+            <h2>MCP Integration</h2>
+            <p>The MCP server can be integrated with several AI applications:</p>
+            <div class="integration-tabs">
+                <div class="tabs">
+                    <button class="tablink active" onclick="openTab(event, 'Docker')">Docker</button>
+                    <button class="tablink" onclick="openTab(event, 'Cursor')">Cursor</button>
+                    <button class="tablink" onclick="openTab(event, 'Claude')">Claude Desktop</button>
+                    <button class="tablink" onclick="openTab(event, 'Windsurf')">Windsurf</button>
+                    <button class="tablink" onclick="openTab(event, 'ChatWise')">ChatWise</button>
+                </div>
+                
+                <div id="Docker" class="tabcontent active">
+                    <h3>Using Docker Image</h3>
+                    <pre><code>{
+  "mcpServers": {
+    "mcp-trino": {
+      "command": "docker",
+      "args": ["run", "--rm", "-i", 
+               "-e", "TRINO_HOST=host.docker.internal", 
+               "-e", "TRINO_PORT=8080",
+               "-e", "TRINO_USER=trino",
+               "-e", "TRINO_PASSWORD=password",
+               "-e", "TRINO_SCHEME=http",
+               "ghcr.io/tuannvm/mcp-trino:latest"],
+      "env": {}
+    }
+  }
+}</code></pre>
+                </div>
+                
+                <div id="Cursor" class="tabcontent">
+                    <h3>Cursor Integration</h3>
+                    <p>To use with <a href="https://cursor.sh/">Cursor</a>, create or edit <code>~/.cursor/mcp.json</code>:</p>
+                    <pre><code>{
+  "mcpServers": {
+    "mcp-trino": {
+      "command": "/path/to/mcp-trino",
+      "args": [],
+      "env": {
+        "TRINO_HOST": "localhost",
+        "TRINO_PORT": "8080",
+        "TRINO_USER": "trino",
+        "TRINO_PASSWORD": "password"
+      }
+    }
+  }
+}</code></pre>
+                </div>
+                
+                <div id="Claude" class="tabcontent">
+                    <h3>Claude Desktop Integration</h3>
+                    <p>To use with <a href="https://claude.ai/desktop">Claude Desktop</a>, edit your Claude configuration file:</p>
+                    <pre><code>{
+  "mcpServers": {
+    "mcp-trino": {
+      "command": "/path/to/mcp-trino",
+      "args": [],
+      "env": {
+        "TRINO_HOST": "localhost",
+        "TRINO_PORT": "8080",
+        "TRINO_USER": "trino",
+        "TRINO_PASSWORD": "password"
+      }
+    }
+  }
+}</code></pre>
+                </div>
+                
+                <div id="Windsurf" class="tabcontent">
+                    <h3>Windsurf Integration</h3>
+                    <p>To use with <a href="https://windsurf.com/">Windsurf</a>, create or edit your <code>mcp_config.json</code>:</p>
+                    <pre><code>{
+  "mcpServers": {
+    "mcp-trino": {
+      "command": "/path/to/mcp-trino",
+      "args": [],
+      "env": {
+        "TRINO_HOST": "localhost",
+        "TRINO_PORT": "8080",
+        "TRINO_USER": "trino",
+        "TRINO_PASSWORD": "password"
+      }
+    }
+  }
+}</code></pre>
+                </div>
+                
+                <div id="ChatWise" class="tabcontent">
+                    <h3>ChatWise Integration</h3>
+                    <p>To use with <a href="https://chatwise.app">ChatWise</a>, follow these steps:</p>
+                    <ol>
+                        <li>Open ChatWise and go to Settings</li>
+                        <li>Navigate to the Tools section</li>
+                        <li>Click the "+" icon to add a new tool</li>
+                        <li>Select "Command Line MCP"</li>
+                        <li>Configure with the appropriate details</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="tools">
+        <div class="container">
+            <h2>Available MCP Tools</h2>
+            <div class="tools-grid">
+                <div class="tool-card">
+                    <h3>execute_query</h3>
+                    <p>Execute a SQL query against Trino</p>
+                </div>
+                <div class="tool-card">
+                    <h3>list_catalogs</h3>
+                    <p>List all catalogs available in the Trino server</p>
+                </div>
+                <div class="tool-card">
+                    <h3>list_schemas</h3>
+                    <p>List all schemas in a catalog</p>
+                </div>
+                <div class="tool-card">
+                    <h3>list_tables</h3>
+                    <p>List all tables in a schema</p>
+                </div>
+                <div class="tool-card">
+                    <h3>get_table_schema</h3>
+                    <p>Get the schema of a table</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="config">
+        <div class="container">
+            <h2>Configuration</h2>
+            <p>The server can be configured using environment variables:</p>
+            <table class="config-table">
+                <thead>
+                    <tr>
+                        <th>Variable</th>
+                        <th>Description</th>
+                        <th>Default</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>TRINO_HOST</td>
+                        <td>Trino server hostname</td>
+                        <td>localhost</td>
+                    </tr>
+                    <tr>
+                        <td>TRINO_PORT</td>
+                        <td>Trino server port</td>
+                        <td>8080</td>
+                    </tr>
+                    <tr>
+                        <td>TRINO_USER</td>
+                        <td>Trino user</td>
+                        <td>trino</td>
+                    </tr>
+                    <tr>
+                        <td>TRINO_PASSWORD</td>
+                        <td>Trino password</td>
+                        <td>(empty)</td>
+                    </tr>
+                    <tr>
+                        <td>TRINO_CATALOG</td>
+                        <td>Default catalog</td>
+                        <td>memory</td>
+                    </tr>
+                    <tr>
+                        <td>TRINO_SCHEMA</td>
+                        <td>Default schema</td>
+                        <td>default</td>
+                    </tr>
+                    <tr>
+                        <td>TRINO_SCHEME</td>
+                        <td>Connection scheme (http/https)</td>
+                        <td>https</td>
+                    </tr>
+                    <tr>
+                        <td>MCP_TRANSPORT</td>
+                        <td>Transport method (stdio/http)</td>
+                        <td>stdio</td>
+                    </tr>
+                    <tr>
+                        <td>MCP_PORT</td>
+                        <td>HTTP port for http transport</td>
+                        <td>9097</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="getting-started">
+        <div class="container">
+            <h2>Getting Started</h2>
+            <div class="install-steps">
+                <div class="step">
+                    <h3>1. Clone the repository</h3>
+                    <pre><code>git clone https://github.com/tuannvm/mcp-trino.git
+cd mcp-trino</code></pre>
+                </div>
+                <div class="step">
+                    <h3>2. Build the server</h3>
+                    <pre><code>make build</code></pre>
+                </div>
+                <div class="step">
+                    <h3>3. Run with STDIO transport</h3>
+                    <pre><code>./bin/mcp-trino</code></pre>
+                </div>
+                <div class="step">
+                    <h3>Or run with HTTP transport</h3>
+                    <pre><code>MCP_TRANSPORT=http MCP_PORT=9097 ./bin/mcp-trino</code></pre>
+                </div>
+                <div class="step">
+                    <h3>Using Docker Compose</h3>
+                    <pre><code>docker-compose up -d</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 Trino MCP Server. Licensed under MIT.</p>
+            <div class="footer-links">
+                <a href="https://github.com/tuannvm/mcp-trino" target="_blank"><i class="fab fa-github"></i> GitHub</a>
+                <a href="https://pkg.go.dev/github.com/tuannvm/mcp-trino" target="_blank"><i class="fas fa-book"></i> Documentation</a>
+                <a href="https://github.com/tuannvm/mcp-trino/issues" target="_blank"><i class="fas fa-bug"></i> Issues</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            
+            tablinks = document.getElementsByClassName("tablink");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+    </script>
+</body>
+</html> 
