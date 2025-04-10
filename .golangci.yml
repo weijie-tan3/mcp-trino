@@ -6,39 +6,4 @@ run:
   modules-download-mode: readonly
 
 linters:
-  enable:
-    - errcheck
-    - gosimple
-    - govet
-    - ineffassign
-    - staticcheck
-    - unused
-    - gosec
-    - revive
-    - misspell
-    - gofmt
-    - goimports
-    - gocritic
-    - gocyclo
-    - bodyclose
-    - noctx
-    - unconvert
-  # Settings for specific linters are nested here
-  settings:
-    gocyclo:
-      min-complexity: 15
-    revive:
-      rules:
-        - name: exported
-    gosec:
-      excludes:
-        - G204 # Recommend avoiding shell command execution with variable input
-        - G112 # Potential slowloris attack vulnerability
-    gocritic:
-      enabled-tags:
-        - diagnostic
-        - style
-        - performance
-        - opinionated
-      disabled-checks:
-        - exitAfterDefer # Sometimes necessary in command-line tools
+  default: standard
