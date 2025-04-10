@@ -1,5 +1,7 @@
 # Trino MCP Server in Go
 
+A high-performance Model Context Protocol (MCP) server for Trino implemented in Go. This project enables AI assistants to seamlessly interact with Trino's distributed SQL query engine through standardized MCP tools.
+
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/tuannvm/mcp-trino/build.yml?branch=main&label=CI%2FCD&logo=github)](https://github.com/tuannvm/mcp-trino/actions/workflows/build.yml)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/tuannvm/mcp-trino?logo=go)](https://github.com/tuannvm/mcp-trino/blob/main/go.mod)
 [![Trivy Scan](https://img.shields.io/github/actions/workflow/status/tuannvm/mcp-trino/build.yml?branch=main&label=Trivy%20Security%20Scan&logo=aquasec)](https://github.com/tuannvm/mcp-trino/actions/workflows/build.yml)
@@ -10,7 +12,19 @@
 [![GitHub Release](https://img.shields.io/github/v/release/tuannvm/mcp-trino?sort=semver)](https://github.com/tuannvm/mcp-trino/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Model Context Protocol (MCP) server for Trino, reimplemented in Go.
+## Downloads
+
+You can download pre-built binaries for your platform:
+
+| Platform | Architecture | Download Link |
+|----------|--------------|---------------|
+| macOS | x86_64 (Intel) | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-darwin-amd64) |
+| macOS | ARM64 (Apple Silicon) | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-darwin-arm64) |
+| Linux | x86_64 | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-linux-amd64) |
+| Linux | ARM64 | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-linux-arm64) |
+| Windows | x86_64 | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-windows-amd64.exe) |
+
+Or see all available downloads on the [GitHub Releases](https://github.com/tuannvm/mcp-trino/releases) page.
 
 ## Overview
 
@@ -199,11 +213,210 @@ Once enabled, click the hammer icon below the input box in ChatWise to access Tr
 
 The server provides the following MCP tools:
 
-1. `execute_query` - Execute a SQL query against Trino
-2. `list_catalogs` - List all catalogs available in the Trino server
-3. `list_schemas` - List all schemas in a catalog
-4. `list_tables` - List all tables in a schema
-5. `get_table_schema` - Get the schema of a table
+### execute_query
+
+Execute a SQL query against Trino with full SQL support for complex analytical queries.
+
+**Sample Prompt:**
+> "How many customers do we have per region? Can you show them in descending order?"
+
+**Example:**
+```json
+{
+  "query": "SELECT region, COUNT(*) as customer_count FROM tpch.tiny.customer GROUP BY region ORDER BY customer_count DESC"
+}
+```
+
+**Response:**
+```json
+{
+  "columns": ["region", "customer_count"],
+  "data": [
+    ["AFRICA", 5],
+    ["AMERICA", 5],
+    ["ASIA", 5],
+    ["EUROPE", 5],
+    ["MIDDLE EAST", 5]
+  ]
+}
+```
+
+### list_catalogs
+
+List all catalogs available in the Trino server, providing a comprehensive view of your data ecosystem.
+
+**Sample Prompt:**
+> "What databases do we have access to in our Trino environment?"
+
+**Example:**
+```json
+{}
+```
+
+**Response:**
+```json
+{
+  "catalogs": ["tpch", "memory", "system", "jmx"]
+}
+```
+
+### list_schemas
+
+List all schemas in a catalog, helping you navigate through the data hierarchy efficiently.
+
+**Sample Prompt:**
+> "What schemas or datasets are available in the tpch catalog?"
+
+**Example:**
+```json
+{
+  "catalog": "tpch"
+}
+```
+
+**Response:**
+```json
+{
+  "schemas": ["information_schema", "sf1", "sf100", "sf1000", "tiny"]
+}
+```
+
+### list_tables
+
+List all tables in a schema, giving you visibility into available datasets.
+
+**Sample Prompt:**
+> "What tables are available in the tpch tiny schema? I need to know what data we can query."
+
+**Example:**
+```json
+{
+  "catalog": "tpch",
+  "schema": "tiny"
+}
+```
+
+**Response:**
+```json
+{
+  "tables": ["customer", "lineitem", "nation", "orders", "part", "partsupp", "region", "supplier"]
+}
+```
+
+### get_table_schema
+
+Get the schema of a table, understanding the structure of your data for better query planning.
+
+**Sample Prompt:**
+> "What columns are in the customer table? I need to know the data types and structure before writing my query."
+
+**Example:**
+```json
+{
+  "catalog": "tpch",
+  "schema": "tiny",
+  "table": "customer"
+}
+```
+
+**Response:**
+```json
+{
+  "columns": [
+    {
+      "name": "custkey",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "name",
+      "type": "varchar",
+      "nullable": false
+    },
+    {
+      "name": "address",
+      "type": "varchar",
+      "nullable": false
+    },
+    {
+      "name": "nationkey",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "phone",
+      "type": "varchar",
+      "nullable": false
+    },
+    {
+      "name": "acctbal",
+      "type": "double",
+      "nullable": false
+    },
+    {
+      "name": "mktsegment",
+      "type": "varchar",
+      "nullable": false
+    },
+    {
+      "name": "comment",
+      "type": "varchar",
+      "nullable": false
+    }
+  ]
+}
+```
+
+This information is invaluable for understanding the column names, data types, and nullability constraints before writing queries against the table.
+
+## End-to-End Example
+
+Here's a complete interaction example showing how an AI assistant might use these tools to answer a business question:
+
+**User Query:** "Can you help me analyze our biggest customers? I want to know the top 5 customers with the highest account balances."
+
+**AI Assistant's workflow:**
+1. First, discover available catalogs
+   ```
+   > Using list_catalogs tool
+   > Discovers tpch catalog
+   ```
+
+2. Then, find available schemas
+   ```
+   > Using list_schemas tool with catalog "tpch"
+   > Discovers "tiny" schema
+   ```
+
+3. Explore available tables
+   ```
+   > Using list_tables tool with catalog "tpch" and schema "tiny"
+   > Finds "customer" table
+   ```
+
+4. Check the customer table schema
+   ```
+   > Using get_table_schema tool
+   > Discovers "custkey", "name", "acctbal" and other columns
+   ```
+
+5. Finally, execute the query
+   ```
+   > Using execute_query tool with:
+   > "SELECT custkey, name, acctbal FROM tpch.tiny.customer ORDER BY acctbal DESC LIMIT 5"
+   ```
+
+6. Returns the results to the user:
+   ```
+   The top 5 customers with highest account balances are:
+   1. Customer #65 (Customer#000000065): $9,222.78
+   2. Customer #13 (Customer#000000013): $8,270.47
+   3. Customer #89 (Customer#000000089): $7,990.56
+   4. Customer #11 (Customer#000000011): $7,912.91
+   5. Customer #82 (Customer#000000082): $7,629.41
+   ```
+
+This seamless workflow demonstrates how the MCP tools enable AI assistants to explore and query data in a conversational manner.
 
 ## Configuration
 
@@ -270,9 +483,13 @@ go test ./...
 make lint
 ```
 
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
 ## License
 
-MIT
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## CI/CD and Releases
 
