@@ -7,6 +7,12 @@ on:
       - "**.md"
       - ".github/ISSUE_TEMPLATE/**"
       - ".gitignore"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".gitignore"
 
 permissions:
   contents: read
@@ -140,6 +146,7 @@ jobs:
 
   build-and-publish:
     name: Build and Publish
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [test, security]
     runs-on: ubuntu-latest
     steps:
