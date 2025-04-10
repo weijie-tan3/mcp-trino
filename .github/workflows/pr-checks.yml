@@ -15,13 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: ">=1.24"
           cache: true
@@ -42,7 +42,7 @@ jobs:
           fi
 
       - name: Install golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v7
         with:
           version: latest
           args: --timeout=5m --out-format=colored-line-number
@@ -59,12 +59,12 @@ jobs:
     needs: verify
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: ">=1.24"
           cache: true
@@ -75,7 +75,7 @@ jobs:
           govulncheck ./...
 
       - name: Run dependency scan
-        uses: aquasecurity/trivy-action@0.17.0
+        uses: aquasecurity/trivy-action@0.30.0
         with:
           scan-type: "fs"
           scan-ref: "."
@@ -96,12 +96,12 @@ jobs:
     needs: verify
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
       - name: Set up Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: "1.24"
           cache: true
@@ -110,7 +110,7 @@ jobs:
         run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           file: ./coverage.txt
 
@@ -120,12 +120,12 @@ jobs:
     needs: [verify, security]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false 
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: ">=1.24"
           cache: true

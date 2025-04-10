@@ -51,7 +51,7 @@ jobs:
           fi
 
       - name: Install golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v7
         with:
           version: latest
           args: --timeout=5m --output-format=colored-line-number
@@ -84,7 +84,7 @@ jobs:
           govulncheck ./...
 
       - name: Run dependency scan
-        uses: aquasecurity/trivy-action@0.17.0
+        uses: aquasecurity/trivy-action@0.30.0
         with:
           scan-type: "fs"
           scan-ref: "."
@@ -132,7 +132,7 @@ jobs:
         run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           file: ./coverage.txt
           flags: unittests
@@ -156,7 +156,7 @@ jobs:
 
       # SLSA provenance generator
       - name: Install SLSA generator
-        uses: slsa-framework/slsa-github-generator/actions/installer@v2.0.0
+        uses: slsa-framework/slsa-github-generator/actions/installer@v2.1.0
       
       - name: Docker meta
         id: meta
@@ -179,7 +179,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true
