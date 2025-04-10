@@ -1,0 +1,8 @@
+theme: jekyll-theme-cayman
+title: Trino MCP Server
+description: A Model Context Protocol (MCP) server for Trino implemented in Go
+show_downloads: true
+github:
+  repository_url: https://github.com/tuannvm/mcp-trino
+  zip_url: https://github.com/tuannvm/mcp-trino/archive/refs/heads/main.zip
+  tar_url: https://github.com/tuannvm/mcp-trino/archive/refs/heads/main.tar.gz 
