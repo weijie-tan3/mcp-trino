@@ -42,13 +42,3 @@ linters:
         - opinionated
       disabled-checks:
         - exitAfterDefer # Sometimes necessary in command-line tools
-
-issues:
-  max-issues-per-linter: 0 # Unlimited
-  max-same-issues: 0 # Unlimited
-  exclude:
-    # Exclude gosec and noctx checks in test files
-    - path: _test\.go
-      linters:
-        - gosec
-        - noctx
