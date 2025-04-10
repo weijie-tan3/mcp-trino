@@ -12,6 +12,20 @@ A high-performance Model Context Protocol (MCP) server for Trino implemented in 
 [![GitHub Release](https://img.shields.io/github/v/release/tuannvm/mcp-trino?sort=semver)](https://github.com/tuannvm/mcp-trino/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+## Downloads
+
+You can download pre-built binaries for your platform:
+
+| Platform | Architecture | Download Link |
+|----------|--------------|---------------|
+| macOS | x86_64 (Intel) | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-darwin-amd64) |
+| macOS | ARM64 (Apple Silicon) | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-darwin-arm64) |
+| Linux | x86_64 | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-linux-amd64) |
+| Linux | ARM64 | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-linux-arm64) |
+| Windows | x86_64 | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-windows-amd64.exe) |
+
+Or see all available downloads on the [GitHub Releases](https://github.com/tuannvm/mcp-trino/releases) page.
+
 ## Project Overview
 
 This project implements a Model Context Protocol (MCP) server for Trino in Go. It enables AI assistants to access Trino's distributed SQL query engine through standardized MCP tools. Trino (formerly PrestoSQL) is a powerful distributed SQL query engine designed for fast analytics on large datasets.
