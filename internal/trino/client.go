@@ -47,7 +47,10 @@ func NewClient(cfg *config.TrinoConfig) (*Client, error) {
 
 	// Test the connection
 	if err := db.Ping(); err != nil {
-		db.Close()
+		closeErr := db.Close()
+		if closeErr != nil {
+			log.Printf("Error closing DB connection: %v", closeErr)
+		}
 		return nil, fmt.Errorf("failed to ping Trino: %w", err)
 	}
 
@@ -73,7 +76,11 @@ func (c *Client) ExecuteQuery(query string) ([]map[string]interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("query execution failed: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}()
 
 	// Get column names
 	columns, err := rows.Columns()

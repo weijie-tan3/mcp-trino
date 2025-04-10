@@ -35,7 +35,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize Trino client: %v", err)
 	}
-	defer trinoClient.Close()
+	defer func() {
+		if err := trinoClient.Close(); err != nil {
+			log.Printf("Error closing Trino client: %v", err)
+		}
+	}()
 
 	// Test connection by listing catalogs
 	log.Println("Testing Trino connection...")
