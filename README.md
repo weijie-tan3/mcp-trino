@@ -12,19 +12,6 @@ A high-performance Model Context Protocol (MCP) server for Trino implemented in 
 [![GitHub Release](https://img.shields.io/github/v/release/tuannvm/mcp-trino?sort=semver)](https://github.com/tuannvm/mcp-trino/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Downloads
-
-You can download pre-built binaries for your platform:
-
-| Platform | Architecture | Download Link |
-|----------|--------------|---------------|
-| macOS | x86_64 (Intel) | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-darwin-amd64) |
-| macOS | ARM64 (Apple Silicon) | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-darwin-arm64) |
-| Linux | x86_64 | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-linux-amd64) |
-| Linux | ARM64 | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-linux-arm64) |
-| Windows | x86_64 | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-windows-amd64.exe) |
-
-Or see all available downloads on the [GitHub Releases](https://github.com/tuannvm/mcp-trino/releases) page.
 
 ## Overview
 
@@ -43,111 +30,54 @@ Trino (formerly PrestoSQL) is a powerful distributed SQL query engine designed f
 
 ## Installation
 
-### One-liner Installation
+### Homebrew (macOS and Linux)
 
-Choose the command that matches your system. These commands download the archive for the **latest** release, extract the binary, and place it directly into `/usr/local/bin` (Linux/macOS) or `C:\Program Files\mcp-trino` (Windows).
-
-**Note:** These commands require `sudo` (Linux/macOS) or running PowerShell as **Administrator** (Windows).
-
-**macOS (Intel / x86_64):**
+The easiest way to install mcp-trino is using Homebrew:
 
 ```bash
-curl -fL \
-  "https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino_1.2.0_darwin_amd64.tar.gz" \
-  | sudo tar xz -C /usr/local/bin mcp-trino \
-  && sudo chmod +x /usr/local/bin/mcp-trino
+# Add the tap repository
+brew tap tuannvm/mcp
+
+# Install mcp-trino
+brew install mcp-trino
 ```
 
-**macOS (Apple Silicon / ARM64):**
+To update to the latest version:
 
 ```bash
-curl -fL \
-  "https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino_1.2.0_darwin_arm64.tar.gz" \
-  | sudo tar xz -C /usr/local/bin mcp-trino \
-  && sudo chmod +x /usr/local/bin/mcp-trino
+brew update && brew upgrade mcp-trino
 ```
 
-**Linux (x86_64 / amd64):**
+### Alternative Installation Methods
 
-```bash
-curl -fL \
-  "https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino_1.2.0_linux_amd64.tar.gz" \
-  | sudo tar xz -C /usr/local/bin mcp-trino \
-  && sudo chmod +x /usr/local/bin/mcp-trino
-```
+#### Manual Download
 
-**Linux (ARM64 / aarch64):**
+1. Download the appropriate binary for your platform from the [GitHub Releases](https://github.com/tuannvm/mcp-trino/releases) page.
+2. Place the binary in a directory included in your PATH (e.g., `/usr/local/bin` on Linux/macOS)
+3. Make it executable (`chmod +x mcp-trino` on Linux/macOS)
 
-```bash
-curl -fL \
-  "https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino_1.2.0_linux_arm64.tar.gz" \
-  | sudo tar xz -C /usr/local/bin mcp-trino \
-  && sudo chmod +x /usr/local/bin/mcp-trino
-```
-
-**Windows (PowerShell - Run as Administrator):**
-
-```powershell
-#Requires -RunAsAdministrator
-$InstallDir = Join-Path $env:ProgramFiles "mcp-trino"
-if (-not (Test-Path $InstallDir)) { New-Item -ItemType Directory -Path $InstallDir -Force }
-$Arch = if ($env:PROCESSOR_ARCHITECTURE -eq 'AMD64') { 'amd64' } elseif ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 'arm64' } else { throw "Unsupported architecture: $env:PROCESSOR_ARCHITECTURE" }
-$FileName = "mcp-trino_1.2.0_windows_${Arch}.zip"
-$DownloadUrl = "https://github.com/tuannvm/mcp-trino/releases/latest/download/${FileName}"
-$TempZip = Join-Path $env:TEMP "mcp-trino.zip"
-Write-Host "Downloading $DownloadUrl to $TempZip..."
-Invoke-WebRequest -Uri $DownloadUrl -OutFile $TempZip
-Write-Host "Extracting mcp-trino.exe to $InstallDir..."
-Expand-Archive -Path $TempZip -DestinationPath $InstallDir -Force
-Remove-Item -Path $TempZip
-Write-Host "Attempting to add $InstallDir to User PATH..."
-$CurrentUserPath = [Environment]::GetEnvironmentVariable('Path', 'User')
-if ($CurrentUserPath -notlike "*$InstallDir*") {
-    try {
-        [Environment]::SetEnvironmentVariable('Path', "$CurrentUserPath;$InstallDir", 'User')
-        Write-Host "Successfully added to PATH. Please restart your shell for changes to take effect."
-    } catch {
-        Write-Warning "Failed to add to PATH automatically. Please add '$InstallDir' to your PATH manually."
-    }
-} else {
-    Write-Host "$InstallDir already in PATH."
-}
-Write-Host "Installation complete. Run 'mcp-trino.exe' from a new shell."
-```
-
-*Note: The Windows PowerShell command requires running PowerShell as Administrator. You might need to restart your terminal/shell for the PATH change to take effect.* 
-
-### Manual Installation
-
-1. Download the appropriate `.tar.gz` or `.zip` archive for your platform from the [GitHub Releases](https://github.com/tuannvm/mcp-trino/releases) page.
-2. Extract the archive.
-3. Place the extracted `mcp-trino` or `mcp-trino.exe` binary in a directory included in your system's PATH (e.g., `/usr/local/bin` on Linux/macOS, or `C:\Program Files\mcp-trino` and add it to the PATH on Windows).
-4. Ensure the binary is executable (`chmod +x mcp-trino` on Linux/macOS).
-
-### From Source
-
-**Prerequisites:**
-
-*   Go 1.24 or later
-*   Docker and Docker Compose (optional, for using the provided Trino setup)
-
-**Steps:**
-
-1. Clone the repository:
+#### From Source
 
 ```bash
 git clone https://github.com/tuannvm/mcp-trino.git
 cd mcp-trino
-```
-
-2. Build the server:
-
-```bash
 make build
+# Binary will be in ./bin/
 ```
 
-3. The `mcp-trino` binary will be located in the `./bin/` directory.
+## Downloads
 
+You can download pre-built binaries for your platform:
+
+| Platform | Architecture | Download Link |
+|----------|--------------|---------------|
+| macOS | x86_64 (Intel) | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-darwin-amd64) |
+| macOS | ARM64 (Apple Silicon) | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-darwin-arm64) |
+| Linux | x86_64 | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-linux-amd64) |
+| Linux | ARM64 | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-linux-arm64) |
+| Windows | x86_64 | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-windows-amd64.exe) |
+
+Or see all available downloads on the [GitHub Releases](https://github.com/tuannvm/mcp-trino/releases) page.
 ## MCP Integration
 
 This MCP server can be integrated with several AI applications:
