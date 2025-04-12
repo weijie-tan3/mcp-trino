@@ -41,13 +41,85 @@ Trino (formerly PrestoSQL) is a powerful distributed SQL query engine designed f
 - ✅ Supports both STDIO and HTTP transports
 - ✅ Compatible with Cursor, Claude Desktop, Windsurf, ChatWise, and any MCP-compatible clients.
 
-## Prerequisites
-
-- Go 1.24 or later
-- Docker and Docker Compose (for containerized usage)
-- A running Trino server (or use the provided Docker setup)
-
 ## Installation
+
+### One-liner Installation
+
+Choose the command that matches your system. These commands download the archive for the **latest** release, extract the binary, and place it directly into `/usr/local/bin` (Linux/macOS) or `C:\Program Files\mcp-trino` (Windows).
+
+**Note:** These commands require `sudo` (Linux/macOS) or running PowerShell as **Administrator** (Windows).
+
+**macOS (Intel / x86_64):**
+
+```bash
+curl -fL "https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino_1.2.0_darwin_amd64.tar.gz" | sudo tar xz -C /usr/local/bin mcp-trino && sudo chmod +x /usr/local/bin/mcp-trino
+```
+
+**macOS (Apple Silicon / ARM64):**
+
+```bash
+curl -fL "https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino_1.2.0_darwin_arm64.tar.gz" | sudo tar xz -C /usr/local/bin mcp-trino && sudo chmod +x /usr/local/bin/mcp-trino
+```
+
+**Linux (x86_64 / amd64):**
+
+```bash
+curl -fL "https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino_1.2.0_linux_amd64.tar.gz" | sudo tar xz -C /usr/local/bin mcp-trino && sudo chmod +x /usr/local/bin/mcp-trino
+```
+
+**Linux (ARM64 / aarch64):**
+
+```bash
+curl -fL "https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino_1.2.0_linux_arm64.tar.gz" | sudo tar xz -C /usr/local/bin mcp-trino && sudo chmod +x /usr/local/bin/mcp-trino
+```
+
+**Windows (PowerShell - Run as Administrator):**
+
+```powershell
+#Requires -RunAsAdministrator
+$InstallDir = Join-Path $env:ProgramFiles "mcp-trino"
+if (-not (Test-Path $InstallDir)) { New-Item -ItemType Directory -Path $InstallDir -Force }
+$Arch = if ($env:PROCESSOR_ARCHITECTURE -eq 'AMD64') { 'amd64' } elseif ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 'arm64' } else { throw "Unsupported architecture: $env:PROCESSOR_ARCHITECTURE" }
+$FileName = "mcp-trino_1.2.0_windows_${Arch}.zip"
+$DownloadUrl = "https://github.com/tuannvm/mcp-trino/releases/latest/download/${FileName}"
+$TempZip = Join-Path $env:TEMP "mcp-trino.zip"
+Write-Host "Downloading $DownloadUrl to $TempZip..."
+Invoke-WebRequest -Uri $DownloadUrl -OutFile $TempZip
+Write-Host "Extracting mcp-trino.exe to $InstallDir..."
+Expand-Archive -Path $TempZip -DestinationPath $InstallDir -Force
+Remove-Item -Path $TempZip
+Write-Host "Attempting to add $InstallDir to User PATH..."
+$CurrentUserPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+if ($CurrentUserPath -notlike "*$InstallDir*") {
+    try {
+        [Environment]::SetEnvironmentVariable('Path', "$CurrentUserPath;$InstallDir", 'User')
+        Write-Host "Successfully added to PATH. Please restart your shell for changes to take effect."
+    } catch {
+        Write-Warning "Failed to add to PATH automatically. Please add '$InstallDir' to your PATH manually."
+    }
+} else {
+    Write-Host "$InstallDir already in PATH."
+}
+Write-Host "Installation complete. Run 'mcp-trino.exe' from a new shell."
+```
+
+*Note: The Windows PowerShell command requires running PowerShell as Administrator. You might need to restart your terminal/shell for the PATH change to take effect.* 
+
+### Manual Installation
+
+1. Download the appropriate `.tar.gz` or `.zip` archive for your platform from the [GitHub Releases](https://github.com/tuannvm/mcp-trino/releases) page.
+2. Extract the archive.
+3. Place the extracted `mcp-trino` or `mcp-trino.exe` binary in a directory included in your system's PATH (e.g., `/usr/local/bin` on Linux/macOS, or `C:\Program Files\mcp-trino` and add it to the PATH on Windows).
+4. Ensure the binary is executable (`chmod +x mcp-trino` on Linux/macOS).
+
+### From Source
+
+**Prerequisites:**
+
+*   Go 1.24 or later
+*   Docker and Docker Compose (optional, for using the provided Trino setup)
+
+**Steps:**
 
 1. Clone the repository:
 
@@ -61,6 +133,8 @@ cd mcp-trino
 ```bash
 make build
 ```
+
+3. The `mcp-trino` binary will be located in the `./bin/` directory.
 
 ## MCP Integration
 
@@ -100,7 +174,7 @@ To use with [Cursor](https://cursor.sh/), create or edit `~/.cursor/mcp.json`:
 {
   "mcpServers": {
     "mcp-trino": {
-      "command": "/path/to/mcp-trino",
+      "command": "mcp-trino",
       "args": [],
       "env": {
         "TRINO_HOST": "<HOST>",
@@ -113,7 +187,7 @@ To use with [Cursor](https://cursor.sh/), create or edit `~/.cursor/mcp.json`:
 }
 ```
 
-Replace the path and environment variables with your specific Trino configuration.
+Replace the environment variables with your specific Trino configuration.
 
 ### Claude Desktop
 
@@ -126,7 +200,7 @@ To use with [Claude Desktop](https://claude.ai/desktop), edit your Claude config
 {
   "mcpServers": {
     "mcp-trino": {
-      "command": "/path/to/mcp-trino",
+      "command": "mcp-trino",
       "args": [],
       "env": {
         "TRINO_HOST": "<HOST>",
@@ -149,7 +223,7 @@ To use with [Windsurf](https://windsurf.com/refer?referral_code=sjqdvqozgx2wyi7r
 {
   "mcpServers": {
     "mcp-trino": {
-      "command": "/path/to/mcp-trino",
+      "command": "mcp-trino",
       "args": [],
       "env": {
         "TRINO_HOST": "<HOST>",
@@ -174,7 +248,7 @@ To use with [ChatWise](https://chatwise.app?atp=uo1wzc), follow these steps:
 4. Select "Command Line MCP"
 5. Configure with the following details:
    - ID: `mcp-trino` (or any name you prefer)
-   - Command: `/path/to/mcp-trino` (full path to the mcp-trino binary)
+   - Command: `mcp-trino`
    - Args: (leave empty)
    - Env: Add the following environment variables:
      ```
@@ -191,7 +265,7 @@ Alternatively, you can import the configuration from JSON:
    {
      "mcpServers": {
        "mcp-trino": {
-         "command": "/path/to/mcp-trino",
+         "command": "mcp-trino",
          "args": [],
          "env": {
            "TRINO_HOST": "<HOST>",
@@ -440,48 +514,6 @@ The server can be configured using the following environment variables:
 
 > **Important**: The default connection mode is HTTPS. If you're using an HTTP-only Trino server, you must set `TRINO_SCHEME=http` in your environment variables.
 
-## Standalone Usage
-
-Run the server with STDIO transport (for direct LLM integration):
-
-```bash
-./bin/mcp-trino
-```
-
-Or with HTTP transport:
-
-```bash
-MCP_TRANSPORT=http MCP_PORT=9097 ./bin/mcp-trino
-```
-
-## Docker Usage
-
-Start the server with Docker Compose:
-
-```bash
-docker-compose up -d
-```
-
-Verify the API is working:
-
-```bash
-curl -X POST "http://localhost:9097/api/query" \
-     -H "Content-Type: application/json" \
-     -d '{"query": "SELECT 1 AS test"}'
-```
-
-## Development
-
-```bash
-# Install dependencies
-go mod download
-
-# Run tests
-go test ./...
-
-# Run linters
-make lint
-```
 
 ## Contributing
 
@@ -529,29 +561,3 @@ When changes are merged to the main branch:
    - Binary builds for multiple platforms
    - Docker image publishing to GitHub Container Registry
    - SBOM and provenance attestation
-
-### Makefile Commands
-
-```bash
-# Build the application
-make build
-
-# Run tests
-make test
-
-# Run linters (same as CI)
-make lint
-
-# Clean build artifacts
-make clean
-
-# Run in development mode
-make run-dev
-
-# Test GoReleaser locally
-make release-snapshot
-
-# Run with Docker
-make docker-compose-up
-make docker-compose-down
-```
