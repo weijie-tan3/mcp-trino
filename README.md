@@ -52,25 +52,37 @@ Choose the command that matches your system. These commands download the archive
 **macOS (Intel / x86_64):**
 
 ```bash
-curl -fL "https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino_1.2.0_darwin_amd64.tar.gz" | sudo tar xz -C /usr/local/bin mcp-trino && sudo chmod +x /usr/local/bin/mcp-trino
+curl -fL \
+  "https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino_1.2.0_darwin_amd64.tar.gz" \
+  | sudo tar xz -C /usr/local/bin mcp-trino \
+  && sudo chmod +x /usr/local/bin/mcp-trino
 ```
 
 **macOS (Apple Silicon / ARM64):**
 
 ```bash
-curl -fL "https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino_1.2.0_darwin_arm64.tar.gz" | sudo tar xz -C /usr/local/bin mcp-trino && sudo chmod +x /usr/local/bin/mcp-trino
+curl -fL \
+  "https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino_1.2.0_darwin_arm64.tar.gz" \
+  | sudo tar xz -C /usr/local/bin mcp-trino \
+  && sudo chmod +x /usr/local/bin/mcp-trino
 ```
 
 **Linux (x86_64 / amd64):**
 
 ```bash
-curl -fL "https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino_1.2.0_linux_amd64.tar.gz" | sudo tar xz -C /usr/local/bin mcp-trino && sudo chmod +x /usr/local/bin/mcp-trino
+curl -fL \
+  "https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino_1.2.0_linux_amd64.tar.gz" \
+  | sudo tar xz -C /usr/local/bin mcp-trino \
+  && sudo chmod +x /usr/local/bin/mcp-trino
 ```
 
 **Linux (ARM64 / aarch64):**
 
 ```bash
-curl -fL "https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino_1.2.0_linux_arm64.tar.gz" | sudo tar xz -C /usr/local/bin mcp-trino && sudo chmod +x /usr/local/bin/mcp-trino
+curl -fL \
+  "https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino_1.2.0_linux_arm64.tar.gz" \
+  | sudo tar xz -C /usr/local/bin mcp-trino \
+  && sudo chmod +x /usr/local/bin/mcp-trino
 ```
 
 **Windows (PowerShell - Run as Administrator):**
