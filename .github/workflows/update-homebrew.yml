@@ -1,0 +1,17 @@
+name: Update Homebrew Formula on Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  trigger-homebrew-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger homebrew formula update
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          repository: tuannvm/homebrew-mcp
+          event-type: update-formula
+          client-payload: '{"repository": "tuannvm/mcp-trino", "formula": "mcp-trino.rb"}' 
