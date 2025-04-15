@@ -76,17 +76,23 @@ func main() {
 	case "http":
 		// HTTP server implementation
 		port := getEnv("MCP_PORT", "8080")
+		host := getEnv("MCP_HOST", "localhost")
 		addr := fmt.Sprintf(":%s", port)
 
 		// Create SSE server for MCP
 		log.Println("Creating SSE server...")
+		baseURL := fmt.Sprintf("http://%s:%s", host, port)
 		sseServer := server.NewSSEServer(mcpServer, 
 			server.WithSSEEndpoint("/sse"),  // Set the SSE endpoint to /sse for Cursor
 			server.WithMessageEndpoint("/api/v1"),  // Set the message endpoint
 			server.WithKeepAlive(true),
+			server.WithBaseURL(baseURL),  // Explicitly set the base URL with the correct port
+			server.WithUseFullURLForMessageEndpoint(true),  // Use full URLs for message endpoints
 		)
 		log.Printf("SSE server created with endpoint: %s", sseServer.CompleteSsePath())
+		log.Printf("Full SSE endpoint URL: %s", sseServer.CompleteSseEndpoint())
 		log.Printf("Message endpoint: %s", sseServer.CompleteMessagePath())
+		log.Printf("Full Message endpoint URL: %s", sseServer.CompleteMessageEndpoint())
 
 		// Create an HTTP server
 		log.Printf("Starting HTTP server on %s", addr)
