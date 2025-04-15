@@ -1,3 +1,11 @@
+# [1.3.0](https://github.com/tuannvm/mcp-trino/compare/v1.2.2...v1.3.0) (2025-04-15)
+
+
+### Features
+
+* **server:** add SSE server and status endpoint handling ([f5316c0](https://github.com/tuannvm/mcp-trino/commit/f5316c0e69f819bd62182169ad079bc39ac381e7))
+* **server:** enhance SSE server configuration with full URL support ([672386d](https://github.com/tuannvm/mcp-trino/commit/672386d3665d9c3ec0a9e8e530160eca8f93d4d7))
+
 # [1.2.0](https://github.com/tuannvm/mcp-trino/compare/v1.1.0...v1.2.0) (2025-04-10)
 
 
