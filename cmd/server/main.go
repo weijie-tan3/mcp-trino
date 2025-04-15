@@ -75,20 +75,67 @@ func main() {
 		}
 	case "http":
 		// HTTP server implementation
-		port := getEnv("MCP_PORT", "8080")
+		port := getEnv("MCP_PORT", "9097")
+		host := getEnv("MCP_HOST", "localhost")
 		addr := fmt.Sprintf(":%s", port)
+
+		// Create SSE server for MCP
+		log.Println("Creating SSE server...")
+		baseURL := fmt.Sprintf("http://%s:%s", host, port)
+		sseServer := server.NewSSEServer(mcpServer, 
+			server.WithSSEEndpoint("/sse"),  // Set the SSE endpoint to /sse for Cursor
+			server.WithMessageEndpoint("/api/v1"),  // Set the message endpoint
+			server.WithKeepAlive(true),
+			server.WithBaseURL(baseURL),  // Explicitly set the base URL with the correct port
+			server.WithUseFullURLForMessageEndpoint(true),  // Use full URLs for message endpoints
+		)
+		log.Printf("SSE server created with endpoint: %s", sseServer.CompleteSsePath())
+		log.Printf("Full SSE endpoint URL: %s", sseServer.CompleteSseEndpoint())
+		log.Printf("Message endpoint: %s", sseServer.CompleteMessagePath())
+		log.Printf("Full Message endpoint URL: %s", sseServer.CompleteMessageEndpoint())
 
 		// Create an HTTP server
 		log.Printf("Starting HTTP server on %s", addr)
 		httpServer := &http.Server{
 			Addr: addr,
 			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				log.Printf("Received request: %s %s", r.Method, r.URL.Path)
+				
+				// Set CORS headers
+				w.Header().Set("Access-Control-Allow-Origin", "*")
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+				w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept")
+				
+				// Handle preflight OPTIONS requests
+				if r.Method == http.MethodOptions {
+					w.WriteHeader(http.StatusOK)
+					return
+				}
+				
+				// Handle SSE requests with proper content-type
+				if r.URL.Path == "/sse" {
+					log.Printf("Handling SSE request to /sse")
+					w.Header().Set("Content-Type", "text/event-stream")
+					w.Header().Set("Cache-Control", "no-cache")
+					w.Header().Set("Connection", "keep-alive")
+					sseServer.ServeHTTP(w, r)
+					return
+				}
+				
 				if r.Method == http.MethodPost && r.URL.Path == "/api/query" {
 					handleTrinoQuery(w, r, trinoClient)
 					return
 				}
+				
+				// Add a GET handler for root path
+				if r.Method == http.MethodGet && r.URL.Path == "/" {
+					handleStatus(w, r)
+					return
+				}
 
-				http.Error(w, "Not found", http.StatusNotFound)
+				// Handle all other requests
+				log.Printf("Delegating request to SSE server: %s %s", r.Method, r.URL.Path)
+				sseServer.ServeHTTP(w, r)
 			}),
 		}
 
@@ -114,6 +161,11 @@ func main() {
 
 // handleTrinoQuery handles HTTP requests for Trino queries
 func handleTrinoQuery(w http.ResponseWriter, r *http.Request, client *trino.Client) {
+	if client == nil {
+		http.Error(w, "Trino client not available", http.StatusServiceUnavailable)
+		return
+	}
+	
 	// Parse request
 	var request struct {
 		Query string `json:"query"`
@@ -202,6 +254,21 @@ func handleSignals(done chan<- bool) {
 	<-signals
 	log.Println("Received shutdown signal, shutting down...")
 	done <- true
+}
+
+// handleStatus responds to GET requests with server status
+func handleStatus(w http.ResponseWriter, r *http.Request) {
+	status := map[string]interface{}{
+		"status":  "ok",
+		"version": Version,
+		"server":  "Trino MCP Server",
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(status); err != nil {
+		http.Error(w, fmt.Sprintf("Error encoding response: %v", err), http.StatusInternalServerError)
+		return
+	}
 }
 
 // getEnv retrieves an environment variable or returns a default value
