@@ -75,7 +75,7 @@ func main() {
 		}
 	case "http":
 		// HTTP server implementation
-		port := getEnv("MCP_PORT", "8080")
+		port := getEnv("MCP_PORT", "9097")
 		host := getEnv("MCP_HOST", "localhost")
 		addr := fmt.Sprintf(":%s", port)
 

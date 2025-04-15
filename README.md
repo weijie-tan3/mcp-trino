@@ -26,6 +26,7 @@ Trino (formerly PrestoSQL) is a powerful distributed SQL query engine designed f
 - ✅ Catalog, schema, and table discovery
 - ✅ Docker container support
 - ✅ Supports both STDIO and HTTP transports
+- ✅ Server-Sent Events (SSE) support for Cursor and other MCP clients
 - ✅ Compatible with Cursor, Claude Desktop, Windsurf, ChatWise, and any MCP-compatible clients.
 
 ## Installation
@@ -130,6 +131,24 @@ To use with [Cursor](https://cursor.sh/), create or edit `~/.cursor/mcp.json`:
 ```
 
 Replace the environment variables with your specific Trino configuration.
+
+For HTTP+SSE transport mode (supported for Cursor integration):
+
+```json
+{
+  "mcpServers": {
+    "mcp-trino-http": {
+      "url": "http://localhost:9097/sse"
+    }
+  }
+}
+```
+
+Then start the server in a separate terminal with:
+
+```bash
+MCP_TRANSPORT=http TRINO_HOST=<HOST> TRINO_PORT=<PORT> TRINO_USER=<USERNAME> TRINO_PASSWORD=<PASSWORD> mcp-trino
+```
 
 ### Claude Desktop
 
@@ -451,11 +470,13 @@ The server can be configured using the following environment variables:
 | TRINO_SSL_INSECURE | Allow insecure SSL            | true      |
 | MCP_TRANSPORT      | Transport method (stdio/http) | stdio     |
 | MCP_PORT           | HTTP port for http transport  | 9097      |
+| MCP_HOST           | Host for HTTP callbacks       | localhost |
 
 > **Note**: When `TRINO_SCHEME` is set to "https", `TRINO_SSL` is automatically set to true regardless of the provided value.
 
 > **Important**: The default connection mode is HTTPS. If you're using an HTTP-only Trino server, you must set `TRINO_SCHEME=http` in your environment variables.
 
+> **For Cursor Integration**: When using with Cursor, set `MCP_TRANSPORT=http` and connect to the `/sse` endpoint. The server will automatically handle SSE (Server-Sent Events) connections.
 
 ## Contributing
 
