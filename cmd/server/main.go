@@ -17,9 +17,10 @@ import (
 	"github.com/tuannvm/mcp-trino/internal/trino"
 )
 
-const (
-	// Version is the server version
-	Version = "0.1.0"
+// These variables will be set during the build via ldflags
+var (
+	// Version is the server version, set by the build process
+	Version = "dev"
 )
 
 func main() {

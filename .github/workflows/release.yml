@@ -77,36 +77,6 @@ jobs:
           GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
           GORELEASER_CURRENT_TAG: v${{ steps.extract_version.outputs.version }}
 
-      # Fallback manual release in case of failure
-      - name: Build Binaries Manually (Fallback)
-        id: manual_build
-        if: failure() && steps.extract_version.outcome == 'success'
-        run: |
-          echo "GoReleaser may have failed, building binaries manually as fallback"
-          mkdir -p dist/binaries
-          GOOS=linux GOARCH=amd64 go build -o dist/binaries/mcp-trino-linux-amd64 ./cmd/server
-          GOOS=darwin GOARCH=amd64 go build -o dist/binaries/mcp-trino-darwin-amd64 ./cmd/server
-          GOOS=windows GOARCH=amd64 go build -o dist/binaries/mcp-trino-windows-amd64.exe ./cmd/server
-          cd dist/binaries
-          tar -czf mcp-trino-linux-amd64.tar.gz mcp-trino-linux-amd64
-          tar -czf mcp-trino-darwin-amd64.tar.gz mcp-trino-darwin-amd64
-          zip mcp-trino-windows-amd64.zip mcp-trino-windows-amd64.exe
-          cd ../..
-          echo "manual_build=true" >> $GITHUB_OUTPUT
-
-      - name: Create Manual GitHub Release (Fallback)
-        if: steps.manual_build.outputs.manual_build == 'true'
-        uses: softprops/action-gh-release@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: v${{ steps.extract_version.outputs.version }}
-          name: Release v${{ steps.extract_version.outputs.version }}
-          draft: false
-          prerelease: false
-          files: |
-            dist/binaries/mcp-trino-linux-amd64.tar.gz
-            dist/binaries/mcp-trino-darwin-amd64.tar.gz
-            dist/binaries/mcp-trino-windows-amd64.zip
 
   # Build and publish Docker image with semantic version tags
   publish-docker-image:
