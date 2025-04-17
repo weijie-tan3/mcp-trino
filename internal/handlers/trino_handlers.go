@@ -31,7 +31,7 @@ func (h *TrinoHandlers) ExecuteQuery(ctx context.Context, request mcp.CallToolRe
 		return mcp.NewToolResultErrorFromErr(mcpErr.Error(), mcpErr), nil
 	}
 
-	// Execute the query
+	// Execute the query - SQL injection protection is handled within the client
 	results, err := h.TrinoClient.ExecuteQuery(query)
 	if err != nil {
 		log.Printf("Error executing query: %v", err)

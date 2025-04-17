@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	_ "github.com/trinodb/trino-go-client/trino"
@@ -66,8 +67,35 @@ func (c *Client) Close() error {
 	return c.db.Close()
 }
 
+// isReadOnlyQuery checks if the SQL query is read-only (SELECT, SHOW, DESCRIBE, EXPLAIN)
+// This helps prevent SQL injection attacks by restricting the types of queries allowed
+func isReadOnlyQuery(query string) bool {
+	// Convert to lowercase for case-insensitive comparison
+	queryLower := strings.ToLower(strings.TrimSpace(query))
+
+	// Check if query starts with SELECT, SHOW, DESCRIBE, EXPLAIN or WITH (for CTEs)
+	// These are generally read-only operations
+	readOnlyPrefixes := []string{
+		"select ", "show ", "describe ", "explain ", "with ",
+	}
+
+	for _, prefix := range readOnlyPrefixes {
+		if strings.HasPrefix(queryLower, prefix) {
+			return true
+		}
+	}
+
+	return false
+}
+
 // ExecuteQuery executes a SQL query and returns the results
 func (c *Client) ExecuteQuery(query string) ([]map[string]interface{}, error) {
+	// SQL injection protection: only allow read-only queries unless explicitly allowed in config
+	if !c.config.AllowWriteQueries && !isReadOnlyQuery(query) {
+		return nil, fmt.Errorf("security restriction: only SELECT, SHOW, DESCRIBE, and EXPLAIN queries are allowed. " +
+			"Set TRINO_ALLOW_WRITE_QUERIES=true to enable write operations (at your own risk)")
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
 
