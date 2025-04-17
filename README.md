@@ -457,24 +457,27 @@ This seamless workflow demonstrates how the MCP tools enable AI assistants to ex
 
 The server can be configured using the following environment variables:
 
-| Variable           | Description                   | Default   |
-| ------------------ | ----------------------------- | --------- |
-| TRINO_HOST         | Trino server hostname         | localhost |
-| TRINO_PORT         | Trino server port             | 8080      |
-| TRINO_USER         | Trino user                    | trino     |
-| TRINO_PASSWORD     | Trino password                | (empty)   |
-| TRINO_CATALOG      | Default catalog               | memory    |
-| TRINO_SCHEMA       | Default schema                | default   |
-| TRINO_SCHEME       | Connection scheme (http/https)| https     |
-| TRINO_SSL          | Enable SSL                    | true      |
-| TRINO_SSL_INSECURE | Allow insecure SSL            | true      |
-| MCP_TRANSPORT      | Transport method (stdio/http) | stdio     |
-| MCP_PORT           | HTTP port for http transport  | 9097      |
-| MCP_HOST           | Host for HTTP callbacks       | localhost |
+| Variable               | Description                       | Default   |
+| ---------------------- | --------------------------------- | --------- |
+| TRINO_HOST             | Trino server hostname             | localhost |
+| TRINO_PORT             | Trino server port                 | 8080      |
+| TRINO_USER             | Trino user                        | trino     |
+| TRINO_PASSWORD         | Trino password                    | (empty)   |
+| TRINO_CATALOG          | Default catalog                   | memory    |
+| TRINO_SCHEMA           | Default schema                    | default   |
+| TRINO_SCHEME           | Connection scheme (http/https)    | https     |
+| TRINO_SSL              | Enable SSL                        | true      |
+| TRINO_SSL_INSECURE     | Allow insecure SSL                | true      |
+| TRINO_ALLOW_WRITE_QUERIES | Allow non-read-only SQL queries | false     |
+| MCP_TRANSPORT          | Transport method (stdio/http)     | stdio     |
+| MCP_PORT               | HTTP port for http transport      | 9097      |
+| MCP_HOST               | Host for HTTP callbacks           | localhost |
 
 > **Note**: When `TRINO_SCHEME` is set to "https", `TRINO_SSL` is automatically set to true regardless of the provided value.
 
 > **Important**: The default connection mode is HTTPS. If you're using an HTTP-only Trino server, you must set `TRINO_SCHEME=http` in your environment variables.
+
+> **Security Note**: By default, only read-only queries (SELECT, SHOW, DESCRIBE, EXPLAIN) are allowed to prevent SQL injection. If you need to execute write operations or other non-read queries, set `TRINO_ALLOW_WRITE_QUERIES=true`, but be aware this bypasses this security protection.
 
 > **For Cursor Integration**: When using with Cursor, set `MCP_TRANSPORT=http` and connect to the `/sse` endpoint. The server will automatically handle SSE (Server-Sent Events) connections.
 

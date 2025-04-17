@@ -83,12 +83,12 @@ func main() {
 		// Create SSE server for MCP
 		log.Println("Creating SSE server...")
 		baseURL := fmt.Sprintf("http://%s:%s", host, port)
-		sseServer := server.NewSSEServer(mcpServer, 
-			server.WithSSEEndpoint("/sse"),  // Set the SSE endpoint to /sse for Cursor
-			server.WithMessageEndpoint("/api/v1"),  // Set the message endpoint
+		sseServer := server.NewSSEServer(mcpServer,
+			server.WithSSEEndpoint("/sse"),        // Set the SSE endpoint to /sse for Cursor
+			server.WithMessageEndpoint("/api/v1"), // Set the message endpoint
 			server.WithKeepAlive(true),
-			server.WithBaseURL(baseURL),  // Explicitly set the base URL with the correct port
-			server.WithUseFullURLForMessageEndpoint(true),  // Use full URLs for message endpoints
+			server.WithBaseURL(baseURL),                   // Explicitly set the base URL with the correct port
+			server.WithUseFullURLForMessageEndpoint(true), // Use full URLs for message endpoints
 		)
 		log.Printf("SSE server created with endpoint: %s", sseServer.CompleteSsePath())
 		log.Printf("Full SSE endpoint URL: %s", sseServer.CompleteSseEndpoint())
@@ -101,18 +101,18 @@ func main() {
 			Addr: addr,
 			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				log.Printf("Received request: %s %s", r.Method, r.URL.Path)
-				
+
 				// Set CORS headers
 				w.Header().Set("Access-Control-Allow-Origin", "*")
 				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 				w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept")
-				
+
 				// Handle preflight OPTIONS requests
 				if r.Method == http.MethodOptions {
 					w.WriteHeader(http.StatusOK)
 					return
 				}
-				
+
 				// Handle SSE requests with proper content-type
 				if r.URL.Path == "/sse" {
 					log.Printf("Handling SSE request to /sse")
@@ -122,12 +122,12 @@ func main() {
 					sseServer.ServeHTTP(w, r)
 					return
 				}
-				
+
 				if r.Method == http.MethodPost && r.URL.Path == "/api/query" {
 					handleTrinoQuery(w, r, trinoClient)
 					return
 				}
-				
+
 				// Add a GET handler for root path
 				if r.Method == http.MethodGet && r.URL.Path == "/" {
 					handleStatus(w, r)
@@ -166,7 +166,7 @@ func handleTrinoQuery(w http.ResponseWriter, r *http.Request, client *trino.Clie
 		http.Error(w, "Trino client not available", http.StatusServiceUnavailable)
 		return
 	}
-	
+
 	// Parse request
 	var request struct {
 		Query string `json:"query"`
@@ -177,7 +177,7 @@ func handleTrinoQuery(w http.ResponseWriter, r *http.Request, client *trino.Clie
 		return
 	}
 
-	// Execute query
+	// Execute query (SQL injection protection is handled in the client)
 	results, err := client.ExecuteQuery(request.Query)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Query execution failed: %v", err), http.StatusInternalServerError)
@@ -264,7 +264,7 @@ func handleStatus(w http.ResponseWriter, r *http.Request) {
 		"version": Version,
 		"server":  "Trino MCP Server",
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(status); err != nil {
 		http.Error(w, fmt.Sprintf("Error encoding response: %v", err), http.StatusInternalServerError)
