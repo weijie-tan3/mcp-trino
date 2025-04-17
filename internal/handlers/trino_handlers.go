@@ -27,20 +27,23 @@ func (h *TrinoHandlers) ExecuteQuery(ctx context.Context, request mcp.CallToolRe
 	// Extract the query parameter
 	query, ok := request.Params.Arguments["query"].(string)
 	if !ok {
-		return nil, fmt.Errorf("query parameter must be a string")
+		mcpErr := fmt.Errorf("query parameter must be a string")
+		return mcp.NewToolResultErrorFromErr(mcpErr.Error(), mcpErr), nil
 	}
 
 	// Execute the query
 	results, err := h.TrinoClient.ExecuteQuery(query)
 	if err != nil {
 		log.Printf("Error executing query: %v", err)
-		return nil, fmt.Errorf("query execution failed: %v", err)
+		mcpErr := fmt.Errorf("query execution failed: %w", err)
+		return mcp.NewToolResultErrorFromErr(mcpErr.Error(), mcpErr), nil
 	}
 
 	// Convert results to JSON string for display
 	jsonData, err := json.MarshalIndent(results, "", "  ")
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal results to JSON: %v", err)
+		mcpErr := fmt.Errorf("failed to marshal results to JSON: %w", err)
+		return mcp.NewToolResultErrorFromErr(mcpErr.Error(), mcpErr), nil
 	}
 
 	// Return the results as formatted JSON text
@@ -52,13 +55,15 @@ func (h *TrinoHandlers) ListCatalogs(ctx context.Context, request mcp.CallToolRe
 	catalogs, err := h.TrinoClient.ListCatalogs()
 	if err != nil {
 		log.Printf("Error listing catalogs: %v", err)
-		return nil, fmt.Errorf("failed to list catalogs: %v", err)
+		mcpErr := fmt.Errorf("failed to list catalogs: %w", err)
+		return mcp.NewToolResultErrorFromErr(mcpErr.Error(), mcpErr), nil
 	}
 
 	// Convert catalogs to JSON string for display
 	jsonData, err := json.MarshalIndent(catalogs, "", "  ")
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal catalogs to JSON: %v", err)
+		mcpErr := fmt.Errorf("failed to marshal catalogs to JSON: %w", err)
+		return mcp.NewToolResultErrorFromErr(mcpErr.Error(), mcpErr), nil
 	}
 
 	return mcp.NewToolResultText(string(jsonData)), nil
@@ -75,13 +80,15 @@ func (h *TrinoHandlers) ListSchemas(ctx context.Context, request mcp.CallToolReq
 	schemas, err := h.TrinoClient.ListSchemas(catalog)
 	if err != nil {
 		log.Printf("Error listing schemas: %v", err)
-		return nil, fmt.Errorf("failed to list schemas: %v", err)
+		mcpErr := fmt.Errorf("failed to list schemas: %w", err)
+		return mcp.NewToolResultErrorFromErr(mcpErr.Error(), mcpErr), nil
 	}
 
 	// Convert schemas to JSON string for display
 	jsonData, err := json.MarshalIndent(schemas, "", "  ")
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal schemas to JSON: %v", err)
+		mcpErr := fmt.Errorf("failed to marshal schemas to JSON: %w", err)
+		return mcp.NewToolResultErrorFromErr(mcpErr.Error(), mcpErr), nil
 	}
 
 	return mcp.NewToolResultText(string(jsonData)), nil
@@ -101,13 +108,15 @@ func (h *TrinoHandlers) ListTables(ctx context.Context, request mcp.CallToolRequ
 	tables, err := h.TrinoClient.ListTables(catalog, schema)
 	if err != nil {
 		log.Printf("Error listing tables: %v", err)
-		return nil, fmt.Errorf("failed to list tables: %v", err)
+		mcpErr := fmt.Errorf("failed to list tables: %w", err)
+		return mcp.NewToolResultErrorFromErr(mcpErr.Error(), mcpErr), nil
 	}
 
 	// Convert tables to JSON string for display
 	jsonData, err := json.MarshalIndent(tables, "", "  ")
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal tables to JSON: %v", err)
+		mcpErr := fmt.Errorf("failed to marshal tables to JSON: %w", err)
+		return mcp.NewToolResultErrorFromErr(mcpErr.Error(), mcpErr), nil
 	}
 
 	return mcp.NewToolResultText(string(jsonData)), nil
@@ -129,20 +138,23 @@ func (h *TrinoHandlers) GetTableSchema(ctx context.Context, request mcp.CallTool
 	// Table parameter is required
 	tableParam, ok := request.Params.Arguments["table"].(string)
 	if !ok {
-		return nil, fmt.Errorf("table parameter is required")
+		mcpErr := fmt.Errorf("table parameter is required")
+		return mcp.NewToolResultErrorFromErr(mcpErr.Error(), mcpErr), nil
 	}
 	table = tableParam
 
 	tableSchema, err := h.TrinoClient.GetTableSchema(catalog, schema, table)
 	if err != nil {
 		log.Printf("Error getting table schema: %v", err)
-		return nil, fmt.Errorf("failed to get table schema: %v", err)
+		mcpErr := fmt.Errorf("failed to get table schema: %w", err)
+		return mcp.NewToolResultErrorFromErr(mcpErr.Error(), mcpErr), nil
 	}
 
 	// Convert table schema to JSON string for display
 	jsonData, err := json.MarshalIndent(tableSchema, "", "  ")
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal table schema to JSON: %v", err)
+		mcpErr := fmt.Errorf("failed to marshal table schema to JSON: %w", err)
+		return mcp.NewToolResultErrorFromErr(mcpErr.Error(), mcpErr), nil
 	}
 
 	return mcp.NewToolResultText(string(jsonData)), nil
