@@ -56,103 +56,76 @@ func main() {
 
 	// Initialize tool handlers
 	trinoHandlers := handlers.NewTrinoHandlers(trinoClient)
-
-	// Register Trino tools
 	registerTrinoTools(mcpServer, trinoHandlers)
 
-	// Choose server mode based on environment
+	// Choose server mode
 	transport := getEnv("MCP_TRANSPORT", "stdio")
 
-	// Setup graceful shutdown
+	// Graceful shutdown
 	done := make(chan bool, 1)
 	go handleSignals(done)
 
-	// Start the server
-	log.Printf("Starting Trino MCP Server with %s transport...", transport)
+	log.Printf("Starting MCP server with %s transport...", transport)
 	switch transport {
 	case "stdio":
 		if err := server.ServeStdio(mcpServer); err != nil {
 			log.Fatalf("STDIO server error: %v", err)
 		}
 	case "http":
-		// HTTP server implementation
 		port := getEnv("MCP_PORT", "9097")
 		host := getEnv("MCP_HOST", "localhost")
 		addr := fmt.Sprintf(":%s", port)
 
-		// Create SSE server for MCP
-		log.Println("Creating SSE server...")
+		// Create SSE server
+		log.Println("Setting up SSE server...")
 		baseURL := fmt.Sprintf("http://%s:%s", host, port)
-		sseServer := server.NewSSEServer(mcpServer,
-			server.WithSSEEndpoint("/sse"),        // Set the SSE endpoint to /sse for Cursor
-			server.WithMessageEndpoint("/api/v1"), // Set the message endpoint
+		sseServer := server.NewSSEServer(
+			mcpServer,
+			server.WithSSEEndpoint("/sse"),
+			server.WithMessageEndpoint("/api/v1"),
 			server.WithKeepAlive(true),
-			server.WithBaseURL(baseURL),                   // Explicitly set the base URL with the correct port
-			server.WithUseFullURLForMessageEndpoint(true), // Use full URLs for message endpoints
+			server.WithBaseURL(baseURL),
+			server.WithUseFullURLForMessageEndpoint(true),
 		)
-		log.Printf("SSE server created with endpoint: %s", sseServer.CompleteSsePath())
-		log.Printf("Full SSE endpoint URL: %s", sseServer.CompleteSseEndpoint())
-		log.Printf("Message endpoint: %s", sseServer.CompleteMessagePath())
-		log.Printf("Full Message endpoint URL: %s", sseServer.CompleteMessageEndpoint())
+		log.Printf("SSE path: %s", sseServer.CompleteSsePath())
+		log.Printf("Message path: %s", sseServer.CompleteMessagePath())
 
-		// Create an HTTP server
-		log.Printf("Starting HTTP server on %s", addr)
 		httpServer := &http.Server{
 			Addr: addr,
 			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				log.Printf("Received request: %s %s", r.Method, r.URL.Path)
-
-				// Set CORS headers
+				log.Printf("HTTP %s %s", r.Method, r.URL.Path)
+				// CORS
 				w.Header().Set("Access-Control-Allow-Origin", "*")
 				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 				w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept")
 
-				// Handle preflight OPTIONS requests
 				if r.Method == http.MethodOptions {
 					w.WriteHeader(http.StatusOK)
 					return
 				}
-
-				// Handle SSE requests with proper content-type
-				if r.URL.Path == "/sse" {
-					log.Printf("Handling SSE request to /sse")
+				switch {
+				case r.URL.Path == "/sse":
 					w.Header().Set("Content-Type", "text/event-stream")
-					w.Header().Set("Cache-Control", "no-cache")
-					w.Header().Set("Connection", "keep-alive")
 					sseServer.ServeHTTP(w, r)
-					return
-				}
-
-				if r.Method == http.MethodPost && r.URL.Path == "/api/query" {
+				case r.Method == http.MethodPost && r.URL.Path == "/api/query":
 					handleTrinoQuery(w, r, trinoClient)
-					return
-				}
-
-				// Add a GET handler for root path
-				if r.Method == http.MethodGet && r.URL.Path == "/" {
+				case r.Method == http.MethodGet && r.URL.Path == "/":
 					handleStatus(w, r)
-					return
+				default:
+					sseServer.ServeHTTP(w, r)
 				}
-
-				// Handle all other requests
-				log.Printf("Delegating request to SSE server: %s %s", r.Method, r.URL.Path)
-				sseServer.ServeHTTP(w, r)
 			}),
 		}
 
-		// Start HTTP server in goroutine
 		go func() {
 			if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 				log.Fatalf("HTTP server error: %v", err)
 			}
 		}()
 
-		// Wait for shutdown signal
 		<-done
 		log.Println("Shutting down HTTP server...")
-		if err := httpServer.Close(); err != nil {
-			log.Printf("Error closing HTTP server: %v", err)
-		}
+		_ = httpServer.Close()
 	default:
 		log.Fatalf("Unsupported transport: %s", transport)
 	}
@@ -160,122 +133,59 @@ func main() {
 	log.Println("Server shutdown complete")
 }
 
-// handleTrinoQuery handles HTTP requests for Trino queries
 func handleTrinoQuery(w http.ResponseWriter, r *http.Request, client *trino.Client) {
 	if client == nil {
 		http.Error(w, "Trino client not available", http.StatusServiceUnavailable)
 		return
 	}
-
-	// Parse request
-	var request struct {
-		Query string `json:"query"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		http.Error(w, fmt.Sprintf("Invalid request: %v", err), http.StatusBadRequest)
+	var req struct{ Query string `json:"query"` }
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
-
-	// Execute query (SQL injection protection is handled in the client)
-	results, err := client.ExecuteQuery(request.Query)
+	res, err := client.ExecuteQuery(req.Query)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Query execution failed: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Query failed: %v", err), http.StatusInternalServerError)
 		return
 	}
-
-	// Return results as JSON
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(results); err != nil {
-		http.Error(w, fmt.Sprintf("Error encoding response: %v", err), http.StatusInternalServerError)
-		return
-	}
+	_ = json.NewEncoder(w).Encode(res)
 }
 
-// registerTrinoTools registers all Trino-related tools with the MCP server
-func registerTrinoTools(mcpServer *server.MCPServer, h *handlers.TrinoHandlers) {
-	// Register ExecuteQuery tool
-	executeQueryTool := mcp.NewTool("execute_query",
-		mcp.WithDescription("Execute a SQL query against the Trino server"),
-		mcp.WithString("query",
-			mcp.Required(),
-			mcp.Description("The SQL query to execute"),
-		),
-	)
-	mcpServer.AddTool(executeQueryTool, h.ExecuteQuery)
-
-	// Register ListCatalogs tool
-	listCatalogsTool := mcp.NewTool("list_catalogs",
-		mcp.WithDescription("List all available catalogs in the Trino server"),
-	)
-	mcpServer.AddTool(listCatalogsTool, h.ListCatalogs)
-
-	// Register ListSchemas tool
-	listSchemasTool := mcp.NewTool("list_schemas",
-		mcp.WithDescription("List all schemas in a catalog"),
-		mcp.WithString("catalog",
-			mcp.Description("The catalog to list schemas from (optional)"),
-		),
-	)
-	mcpServer.AddTool(listSchemasTool, h.ListSchemas)
-
-	// Register ListTables tool
-	listTablesTool := mcp.NewTool("list_tables",
-		mcp.WithDescription("List all tables in a schema"),
-		mcp.WithString("catalog",
-			mcp.Description("The catalog containing the schema (optional)"),
-		),
-		mcp.WithString("schema",
-			mcp.Description("The schema to list tables from (optional)"),
-		),
-	)
-	mcpServer.AddTool(listTablesTool, h.ListTables)
-
-	// Register GetTableSchema tool
-	getTableSchemaTool := mcp.NewTool("get_table_schema",
-		mcp.WithDescription("Get the schema of a table"),
-		mcp.WithString("catalog",
-			mcp.Description("The catalog containing the table (optional)"),
-		),
-		mcp.WithString("schema",
-			mcp.Description("The schema containing the table (optional)"),
-		),
-		mcp.WithString("table",
-			mcp.Required(),
-			mcp.Description("The table to get the schema for"),
-		),
-	)
-	mcpServer.AddTool(getTableSchemaTool, h.GetTableSchema)
+func registerTrinoTools(m *server.MCPServer, h *handlers.TrinoHandlers) {
+	m.AddTool(mcp.NewTool("execute_query",
+		mcp.WithDescription("Execute a SQL query"),
+		mcp.WithString("query", mcp.Required(), mcp.Description("SQL query")),
+	), h.ExecuteQuery)
+	m.AddTool(mcp.NewTool("list_catalogs", mcp.WithDescription("List catalogs")), h.ListCatalogs)
+	m.AddTool(mcp.NewTool("list_schemas",
+		mcp.WithDescription("List schemas"),
+		mcp.WithString("catalog", mcp.Description("Catalog"))), h.ListSchemas)
+	m.AddTool(mcp.NewTool("list_tables",
+		mcp.WithDescription("List tables"),
+		mcp.WithString("catalog", mcp.Description("Catalog")),
+		mcp.WithString("schema", mcp.Description("Schema"))), h.ListTables)
+	m.AddTool(mcp.NewTool("get_table_schema",
+		mcp.WithDescription("Get table schema"),
+		mcp.WithString("table", mcp.Required(), mcp.Description("Table"))), h.GetTableSchema)
 }
 
-// handleSignals handles OS signals for graceful shutdown
 func handleSignals(done chan<- bool) {
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
-	<-signals
-	log.Println("Received shutdown signal, shutting down...")
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	<-ch
 	done <- true
 }
 
-// handleStatus responds to GET requests with server status
 func handleStatus(w http.ResponseWriter, r *http.Request) {
-	status := map[string]interface{}{
-		"status":  "ok",
-		"version": Version,
-		"server":  "Trino MCP Server",
-	}
-
+	status := map[string]string{"status": "ok", "version": Version}
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(status); err != nil {
-		http.Error(w, fmt.Sprintf("Error encoding response: %v", err), http.StatusInternalServerError)
-		return
-	}
+	_ = json.NewEncoder(w).Encode(status)
 }
 
-// getEnv retrieves an environment variable or returns a default value
-func getEnv(key, fallback string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
+func getEnv(key, def string) string {
+	if v, ok := os.LookupEnv(key); ok {
+		return v
 	}
-	return fallback
+	return def
 }
