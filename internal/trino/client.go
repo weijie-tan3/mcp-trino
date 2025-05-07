@@ -58,7 +58,7 @@ func NewClient(cfg *config.TrinoConfig) (*Client, error) {
 	return &Client{
 		db:      db,
 		config:  cfg,
-		timeout: 30 * time.Second, // Default timeout
+		timeout: cfg.QueryTimeout,
 	}, nil
 }
 
