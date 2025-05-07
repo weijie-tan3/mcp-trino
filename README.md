@@ -92,8 +92,8 @@ To use the Docker image instead of a local binary:
   "mcpServers": {
     "mcp-trino": {
       "command": "docker",
-      "args": ["run", "--rm", "-i", 
-               "-e", "TRINO_HOST=<HOST>", 
+      "args": ["run", "--rm", "-i",
+               "-e", "TRINO_HOST=<HOST>",
                "-e", "TRINO_PORT=<PORT>",
                "-e", "TRINO_USER=<USERNAME>",
                "-e", "TRINO_PASSWORD=<PASSWORD>",
@@ -469,6 +469,7 @@ The server can be configured using the following environment variables:
 | TRINO_SSL              | Enable SSL                        | true      |
 | TRINO_SSL_INSECURE     | Allow insecure SSL                | true      |
 | TRINO_ALLOW_WRITE_QUERIES | Allow non-read-only SQL queries | false     |
+| TRINO_QUERY_TIMEOUT    | Query timeout in seconds          | 30        |
 | MCP_TRANSPORT          | Transport method (stdio/http)     | stdio     |
 | MCP_PORT               | HTTP port for http transport      | 9097      |
 | MCP_HOST               | Host for HTTP callbacks           | localhost |
