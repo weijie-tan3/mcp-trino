@@ -34,7 +34,13 @@ func NewTrinoConfig() *TrinoConfig {
 	// Parse query timeout from environment variable, default to 30 seconds
 	timeoutStr := getEnv("TRINO_QUERY_TIMEOUT", "30")
 	timeoutInt, _ := strconv.Atoi(timeoutStr)
-	queryTimeout := time.Duration(timeoutInt) * time.Second
+        timeoutInt, _ := strconv.Atoi(timeoutStr)
+        // Ensure timeout is at least 1 second
+        if timeoutInt <= 0 {
+            log.Printf("WARNING: Invalid TRINO_QUERY_TIMEOUT value '%d', must be positive. Defaulting to 30 seconds", timeoutInt)
+            timeoutInt = 30
+        }
+        queryTimeout := time.Duration(timeoutInt) * time.Second
 
 	// If using HTTPS, force SSL to true
 	if strings.EqualFold(scheme, "https") {
