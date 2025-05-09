@@ -31,16 +31,22 @@ func NewTrinoConfig() *TrinoConfig {
 	scheme := getEnv("TRINO_SCHEME", "https")
 	allowWriteQueries, _ := strconv.ParseBool(getEnv("TRINO_ALLOW_WRITE_QUERIES", "false"))
 
-	// Parse query timeout from environment variable, default to 30 seconds
-	timeoutStr := getEnv("TRINO_QUERY_TIMEOUT", "30")
-	timeoutInt, _ := strconv.Atoi(timeoutStr)
-        timeoutInt, _ := strconv.Atoi(timeoutStr)
-        // Ensure timeout is at least 1 second
-        if timeoutInt <= 0 {
-            log.Printf("WARNING: Invalid TRINO_QUERY_TIMEOUT value '%d', must be positive. Defaulting to 30 seconds", timeoutInt)
-            timeoutInt = 30
-        }
-        queryTimeout := time.Duration(timeoutInt) * time.Second
+	// Parse query timeout from environment variable
+	const defaultTimeout = 30
+	timeoutStr := getEnv("TRINO_QUERY_TIMEOUT", strconv.Itoa(defaultTimeout))
+	timeoutInt, err := strconv.Atoi(timeoutStr)
+
+	// Validate timeout value
+	switch {
+	case err != nil:
+		log.Printf("WARNING: Invalid TRINO_QUERY_TIMEOUT '%s': not an integer. Using default of %d seconds", timeoutStr, defaultTimeout)
+		timeoutInt = defaultTimeout
+	case timeoutInt <= 0:
+		log.Printf("WARNING: Invalid TRINO_QUERY_TIMEOUT '%d': must be positive. Using default of %d seconds", timeoutInt, defaultTimeout)
+		timeoutInt = defaultTimeout
+	}
+
+	queryTimeout := time.Duration(timeoutInt) * time.Second
 
 	// If using HTTPS, force SSL to true
 	if strings.EqualFold(scheme, "https") {
