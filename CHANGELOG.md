@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/tuannvm/mcp-trino/compare/v1.3.3...v1.4.0) (2025-05-09)
+
+
+### Features
+
+* add query timeout to trino client ([3a8419f](https://github.com/tuannvm/mcp-trino/commit/3a8419fbf68c8a6348f579495e185f5be9af80c8))
+
 ## [1.3.3](https://github.com/tuannvm/mcp-trino/compare/v1.3.2...v1.3.3) (2025-05-03)
 
 ## [1.3.2](https://github.com/tuannvm/mcp-trino/compare/v1.3.1...v1.3.2) (2025-04-25)
