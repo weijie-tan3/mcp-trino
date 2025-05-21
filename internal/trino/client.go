@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/url"
 	"strings"
 	"time"
 
@@ -23,12 +24,12 @@ type Client struct {
 func NewClient(cfg *config.TrinoConfig) (*Client, error) {
 	dsn := fmt.Sprintf("%s://%s:%s@%s:%d?catalog=%s&schema=%s&SSL=%t&SSLInsecure=%t",
 		cfg.Scheme,
-		cfg.User,
-		cfg.Password,
+		url.QueryEscape(cfg.User),
+		url.QueryEscape(cfg.Password),
 		cfg.Host,
 		cfg.Port,
-		cfg.Catalog,
-		cfg.Schema,
+		url.QueryEscape(cfg.Catalog),
+		url.QueryEscape(cfg.Schema),
 		cfg.SSL,
 		cfg.SSLInsecure)
 
