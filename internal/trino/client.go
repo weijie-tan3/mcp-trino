@@ -71,8 +71,45 @@ func (c *Client) Close() error {
 // isReadOnlyQuery checks if the SQL query is read-only (SELECT, SHOW, DESCRIBE, EXPLAIN)
 // This helps prevent SQL injection attacks by restricting the types of queries allowed
 func isReadOnlyQuery(query string) bool {
-	// Convert to lowercase for case-insensitive comparison
+	// Convert to lowercase for case-insensitive comparison and normalize whitespace
 	queryLower := strings.ToLower(strings.TrimSpace(query))
+	
+	// Replace any newline characters with spaces to normalize the query format
+	queryLower = strings.ReplaceAll(queryLower, "\n", " ")
+	queryLower = strings.ReplaceAll(queryLower, "\r", " ")
+	
+	// Ensure there's at least one space after keywords for proper prefix matching
+	if strings.HasPrefix(queryLower, "select") && !strings.HasPrefix(queryLower, "select ") {
+		queryLower = "select " + queryLower[6:]
+	}
+	if strings.HasPrefix(queryLower, "show") && !strings.HasPrefix(queryLower, "show ") {
+		queryLower = "show " + queryLower[4:]
+	}
+	if strings.HasPrefix(queryLower, "describe") && !strings.HasPrefix(queryLower, "describe ") {
+		queryLower = "describe " + queryLower[8:]
+	}
+	if strings.HasPrefix(queryLower, "explain") && !strings.HasPrefix(queryLower, "explain ") {
+		queryLower = "explain " + queryLower[7:]
+	}
+	if strings.HasPrefix(queryLower, "with") && !strings.HasPrefix(queryLower, "with ") {
+		queryLower = "with " + queryLower[4:]
+	}
+
+	// First check for SQL injection attempts with multiple statements
+	if strings.Contains(queryLower, ";") {
+		return false
+	}
+
+	// Check for write operations anywhere in the query
+	writeOperations := []string{
+		"insert ", "update ", "delete ", "drop ", "create ", "alter ", "truncate ",
+	}
+	
+	for _, op := range writeOperations {
+		if strings.Contains(queryLower, op) {
+			return false
+		}
+	}
 
 	// Check if query starts with SELECT, SHOW, DESCRIBE, EXPLAIN or WITH (for CTEs)
 	// These are generally read-only operations
@@ -221,11 +258,27 @@ func (c *Client) ListTables(catalog, schema string) ([]string, error) {
 
 // GetTableSchema returns the schema of a table
 func (c *Client) GetTableSchema(catalog, schema, table string) ([]map[string]interface{}, error) {
-	if catalog == "" {
-		catalog = c.config.Catalog
-	}
-	if schema == "" {
-		schema = c.config.Schema
+	// Check if table already contains a fully qualified name (catalog.schema.table)
+	parts := strings.Split(table, ".")
+	if len(parts) == 3 {
+		// If table is already fully qualified, use it directly
+		query := fmt.Sprintf("DESCRIBE %s", table)
+		return c.ExecuteQuery(query)
+	} else if len(parts) == 2 {
+		// If table has schema.table format
+		schema = parts[0]
+		table = parts[1]
+		if catalog == "" {
+			catalog = c.config.Catalog
+		}
+	} else {
+		// Use provided or default catalog and schema
+		if catalog == "" {
+			catalog = c.config.Catalog
+		}
+		if schema == "" {
+			schema = c.config.Schema
+		}
 	}
 
 	query := fmt.Sprintf("DESCRIBE %s.%s.%s", catalog, schema, table)
