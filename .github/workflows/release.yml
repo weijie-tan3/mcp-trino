@@ -46,7 +46,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v6
         if: steps.tag.outputs.new_tag != ''
         with:
-          version: v1.18.2
+          version: latest
           distribution: goreleaser
           args: release --clean
         env:
