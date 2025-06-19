@@ -138,7 +138,9 @@ func handleTrinoQuery(w http.ResponseWriter, r *http.Request, client *trino.Clie
 		http.Error(w, "Trino client not available", http.StatusServiceUnavailable)
 		return
 	}
-	var req struct{ Query string `json:"query"` }
+	var req struct {
+		Query string `json:"query"`
+	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
