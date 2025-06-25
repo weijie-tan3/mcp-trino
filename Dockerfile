@@ -1,18 +1,31 @@
-FROM golang:1.24-alpine AS builder
+# These are automatically provided by BuildKit but must be declared before use
+ARG BUILDPLATFORM
+ARG TARGETPLATFORM
+ARG TARGETOS
+ARG TARGETARCH
+
+FROM --platform=$BUILDPLATFORM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
-# Copy go mod and sum files
+# Install build dependencies in a separate layer for better caching
+RUN apk add --no-cache git
+
+# Copy go mod and sum files first (better layer caching)
 COPY go.mod go.sum ./
 
-# Download dependencies
-RUN go mod download
+# Download dependencies in a separate cached layer
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download && go mod verify
 
 # Copy source code
 COPY . .
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o trino-mcp ./cmd/
+# Cross-compile the application with enhanced caching
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/go/pkg/mod \
+    CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
+    go build -ldflags="-w -s" -trimpath -o trino-mcp ./cmd/
 
 # Use a small image for the final container
 FROM alpine:latest
@@ -25,13 +38,14 @@ WORKDIR /root/
 COPY --from=builder /app/trino-mcp .
 
 # Default environment variables
-ENV TRINO_HOST="trino"
-ENV TRINO_PORT="8080"
-ENV TRINO_USER="trino"
-ENV TRINO_CATALOG="memory"
-ENV TRINO_SCHEMA="default"
-ENV MCP_TRANSPORT="http"
-ENV MCP_PORT="9097"
+ENV TRINO_HOST="trino" \
+    TRINO_PORT="8080" \
+    TRINO_USER="trino" \
+    TRINO_CATALOG="memory" \
+    TRINO_SCHEMA="default" \
+    MCP_TRANSPORT="http" \
+    MCP_HOST="0.0.0.0" \
+    MCP_PORT="9097"
 
 # Expose the port
 EXPOSE ${MCP_PORT}
