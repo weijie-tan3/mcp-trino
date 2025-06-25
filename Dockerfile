@@ -27,8 +27,8 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
     go build -ldflags="-w -s" -trimpath -o trino-mcp ./cmd/
 
-# Use a small image for the final container
-FROM alpine:latest
+# Use a small image for the final container (explicit target platform)
+FROM --platform=$TARGETPLATFORM alpine:latest
 
 RUN apk --no-cache add ca-certificates
 
