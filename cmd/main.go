@@ -169,6 +169,8 @@ func registerTrinoTools(m *server.MCPServer, h *handlers.TrinoHandlers) {
 		mcp.WithString("schema", mcp.Description("Schema"))), h.ListTables)
 	m.AddTool(mcp.NewTool("get_table_schema",
 		mcp.WithDescription("Get table schema"),
+		mcp.WithString("catalog", mcp.Description("Catalog")),
+		mcp.WithString("schema", mcp.Description("Schema")),
 		mcp.WithString("table", mcp.Required(), mcp.Description("Table"))), h.GetTableSchema)
 }
 
