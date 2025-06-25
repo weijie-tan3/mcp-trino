@@ -138,7 +138,9 @@ func handleTrinoQuery(w http.ResponseWriter, r *http.Request, client *trino.Clie
 		http.Error(w, "Trino client not available", http.StatusServiceUnavailable)
 		return
 	}
-	var req struct{ Query string `json:"query"` }
+	var req struct {
+		Query string `json:"query"`
+	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
@@ -167,6 +169,8 @@ func registerTrinoTools(m *server.MCPServer, h *handlers.TrinoHandlers) {
 		mcp.WithString("schema", mcp.Description("Schema"))), h.ListTables)
 	m.AddTool(mcp.NewTool("get_table_schema",
 		mcp.WithDescription("Get table schema"),
+		mcp.WithString("catalog", mcp.Description("Catalog")),
+		mcp.WithString("schema", mcp.Description("Schema")),
 		mcp.WithString("table", mcp.Required(), mcp.Description("Table"))), h.GetTableSchema)
 }
 
