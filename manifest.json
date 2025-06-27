@@ -24,8 +24,8 @@
     "type": "binary",
     "entry_point": "server/mcp-trino-darwin-arm64",
     "mcp_config": {
-      "command": "${__dirname}/server/mcp-trino-darwin-arm64",
-      "args": [],
+      "command": "sh",
+      "args": ["-c", "chmod +x \"${__dirname}/server/mcp-trino-darwin-arm64\" && \"${__dirname}/server/mcp-trino-darwin-arm64\""],
       "env": {
         "TRINO_HOST": "${user_config.trino_host}",
         "TRINO_PORT": "${user_config.trino_port}",
@@ -42,7 +42,8 @@
           "command": "${__dirname}/server/mcp-trino-windows-amd64.exe"
         },
         "linux": {
-          "command": "${__dirname}/server/mcp-trino-linux-amd64"
+          "command": "sh",
+          "args": ["-c", "chmod +x \"${__dirname}/server/mcp-trino-linux-amd64\" && \"${__dirname}/server/mcp-trino-linux-amd64\""]
         }
       }
     }
