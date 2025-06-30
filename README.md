@@ -31,6 +31,14 @@ Trino (formerly PrestoSQL) is a powerful distributed SQL query engine designed f
 
 ## Installation
 
+### Quick Install (One-liner)
+
+For macOS and Linux, install with a single command:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tuannvm/mcp-trino/main/install.sh | bash
+```
+
 ### Homebrew (macOS and Linux)
 
 The easiest way to install mcp-trino is using Homebrew:
