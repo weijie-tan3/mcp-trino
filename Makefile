@@ -1,4 +1,4 @@
-.PHONY: build build-dxt pack-dxt test clean run-dev release-snapshot run-docker run docker-compose-up docker-compose-down lint
+.PHONY: build build-dxt pack-dxt test clean run-dev release-snapshot run-docker run docker-compose-up docker-compose-down lint docker-test
 
 # Variables
 BINARY_NAME=mcp-trino
@@ -70,5 +70,10 @@ lint:
 	@if ! command -v golangci-lint &> /dev/null; then echo "Installing golangci-lint..." && go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; fi
 	@golangci-lint run --timeout=5m
 
+# Run tests in Docker
+docker-test:
+	docker build -f Dockerfile.test -t $(BINARY_NAME)-test:$(VERSION) .
+	docker run --rm $(BINARY_NAME)-test:$(VERSION)
+
 # Default target
-all: clean build 
+all: clean build
