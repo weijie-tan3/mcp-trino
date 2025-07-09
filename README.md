@@ -36,7 +36,7 @@ Trino (formerly PrestoSQL) is a powerful distributed SQL query engine designed f
 For macOS and Linux, install with a single command:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tuannvm/mcp-trino/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/tuannvm/mcp-trino/main/install.sh -o install.sh && chmod +x install.sh && ./install.sh
 ```
 
 ### Homebrew (macOS and Linux)
@@ -87,6 +87,39 @@ You can download pre-built binaries for your platform:
 | Windows | x86_64 | [Download](https://github.com/tuannvm/mcp-trino/releases/latest/download/mcp-trino-windows-amd64.exe) |
 
 Or see all available downloads on the [GitHub Releases](https://github.com/tuannvm/mcp-trino/releases) page.
+
+### Installation Troubleshooting
+
+If you encounter issues during installation:
+
+**Common Issues:**
+- **Binary not found in PATH**: The install script installs to `~/.local/bin` by default. Make sure this directory is in your PATH:
+  ```bash
+  export PATH="$HOME/.local/bin:$PATH"
+  ```
+  Add this to your shell profile (`.bashrc`, `.zshrc`, etc.) to make it permanent.
+
+- **Permission denied**: If you get permission errors, ensure the install directory is writable:
+  ```bash
+  mkdir -p ~/.local/bin
+  chmod 755 ~/.local/bin
+  ```
+
+- **Claude configuration not found**: If the install script doesn't detect your Claude installation:
+  - For Claude Desktop: Check if the config file exists at the expected location
+  - For Claude Code: Verify the `claude` command is available in PATH
+  - Use the manual configuration instructions provided by the script
+
+- **GitHub API rate limiting**: If you're hitting GitHub API rate limits:
+  ```bash
+  export GITHUB_TOKEN=your_github_token
+  curl -fsSL https://raw.githubusercontent.com/tuannvm/mcp-trino/main/install.sh | bash
+  ```
+
+**Getting Help:**
+- Check the [GitHub Issues](https://github.com/tuannvm/mcp-trino/issues) for similar problems
+- Run the install script with `--help` for usage information
+- Use manual installation methods if the automated script fails
 ## MCP Integration
 
 This MCP server can be integrated with several AI applications:
@@ -160,10 +193,11 @@ MCP_TRANSPORT=http TRINO_HOST=<HOST> TRINO_PORT=<PORT> TRINO_USER=<USERNAME> TRI
 
 ### Claude Desktop
 
-To use with [Claude Desktop](https://claude.ai/desktop), edit your Claude configuration file:
+To use with [Claude Desktop](https://claude.ai/desktop), the easiest way is to use the install script which will automatically configure it for you. Alternatively, you can manually edit your Claude configuration file:
 
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+- Linux: `~/.config/Claude/claude_desktop_config.json`
 
 ```json
 {
@@ -183,6 +217,25 @@ To use with [Claude Desktop](https://claude.ai/desktop), edit your Claude config
 ```
 
 After updating the configuration, restart Claude Desktop. You should see the MCP tools available in the tools menu.
+
+### Claude Code
+
+To use with [Claude Code](https://claude.ai/code), the install script will automatically configure it for you. Alternatively, you can manually add the MCP server:
+
+```bash
+claude mcp add mcp-trino mcp-trino
+```
+
+Then set your environment variables:
+
+```bash
+export TRINO_HOST=<HOST>
+export TRINO_PORT=<PORT>
+export TRINO_USER=<USERNAME>
+export TRINO_PASSWORD=<PASSWORD>
+```
+
+Restart Claude Code to see the MCP tools available.
 
 ### Windsurf
 
