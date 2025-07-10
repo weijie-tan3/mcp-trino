@@ -128,6 +128,7 @@ This MCP server can be integrated with several AI applications:
 
 To use the Docker image instead of a local binary:
 
+#### Traditional Authentication
 ```json
 {
   "mcpServers": {
@@ -146,6 +147,25 @@ To use the Docker image instead of a local binary:
 }
 ```
 
+#### OAuth Authentication
+```json
+{
+  "mcpServers": {
+    "mcp-trino": {
+      "command": "docker",
+      "args": ["run", "--rm", "-i",
+               "-e", "TRINO_HOST=<HOST>",
+               "-e", "TRINO_PORT=<PORT>",
+               "-e", "TRINO_EXTERNAL_AUTHENTICATION=true",
+               "-e", "TRINO_ACCESS_TOKEN=<YOUR_JWT_TOKEN>",
+               "-e", "TRINO_SCHEME=https",
+               "ghcr.io/tuannvm/mcp-trino:latest"],
+      "env": {}
+    }
+  }
+}
+```
+
 > **Note**: The `host.docker.internal` special DNS name allows the container to connect to services running on the host machine. If your Trino server is running elsewhere, replace with the appropriate host.
 
 This Docker configuration can be used in any of the below applications.
@@ -154,6 +174,7 @@ This Docker configuration can be used in any of the below applications.
 
 To use with [Cursor](https://cursor.sh/), create or edit `~/.cursor/mcp.json`:
 
+#### Traditional Authentication
 ```json
 {
   "mcpServers": {
@@ -165,6 +186,24 @@ To use with [Cursor](https://cursor.sh/), create or edit `~/.cursor/mcp.json`:
         "TRINO_PORT": "<PORT>",
         "TRINO_USER": "<USERNAME>",
         "TRINO_PASSWORD": "<PASSWORD>"
+      }
+    }
+  }
+}
+```
+
+#### OAuth Authentication
+```json
+{
+  "mcpServers": {
+    "mcp-trino": {
+      "command": "mcp-trino",
+      "args": [],
+      "env": {
+        "TRINO_HOST": "<HOST>",
+        "TRINO_PORT": "<PORT>",
+        "TRINO_EXTERNAL_AUTHENTICATION": "true",
+        "TRINO_ACCESS_TOKEN": "<YOUR_JWT_TOKEN>"
       }
     }
   }
@@ -187,8 +226,14 @@ For HTTP+SSE transport mode (supported for Cursor integration):
 
 Then start the server in a separate terminal with:
 
+#### Traditional Authentication
 ```bash
 MCP_TRANSPORT=http TRINO_HOST=<HOST> TRINO_PORT=<PORT> TRINO_USER=<USERNAME> TRINO_PASSWORD=<PASSWORD> mcp-trino
+```
+
+#### OAuth Authentication
+```bash
+MCP_TRANSPORT=http TRINO_HOST=<HOST> TRINO_PORT=<PORT> TRINO_EXTERNAL_AUTHENTICATION=true TRINO_ACCESS_TOKEN=<YOUR_JWT_TOKEN> mcp-trino
 ```
 
 ### Claude Desktop
@@ -199,6 +244,7 @@ To use with [Claude Desktop](https://claude.ai/desktop), the easiest way is to u
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 - Linux: `~/.config/Claude/claude_desktop_config.json`
 
+#### Traditional Authentication
 ```json
 {
   "mcpServers": {
@@ -210,6 +256,24 @@ To use with [Claude Desktop](https://claude.ai/desktop), the easiest way is to u
         "TRINO_PORT": "<PORT>",
         "TRINO_USER": "<USERNAME>",
         "TRINO_PASSWORD": "<PASSWORD>"
+      }
+    }
+  }
+}
+```
+
+#### OAuth Authentication
+```json
+{
+  "mcpServers": {
+    "mcp-trino": {
+      "command": "mcp-trino",
+      "args": [],
+      "env": {
+        "TRINO_HOST": "<HOST>",
+        "TRINO_PORT": "<PORT>",
+        "TRINO_EXTERNAL_AUTHENTICATION": "true",
+        "TRINO_ACCESS_TOKEN": "<YOUR_JWT_TOKEN>"
       }
     }
   }
@@ -518,6 +582,8 @@ This seamless workflow demonstrates how the MCP tools enable AI assistants to ex
 
 The server can be configured using the following environment variables:
 
+### Connection Parameters
+
 | Variable               | Description                       | Default   |
 | ---------------------- | --------------------------------- | --------- |
 | TRINO_HOST             | Trino server hostname             | localhost |
@@ -529,17 +595,62 @@ The server can be configured using the following environment variables:
 | TRINO_SCHEME           | Connection scheme (http/https)    | https     |
 | TRINO_SSL              | Enable SSL                        | true      |
 | TRINO_SSL_INSECURE     | Allow insecure SSL                | true      |
+
+### Authentication Parameters
+
+| Variable                   | Description                              | Default |
+| -------------------------- | ---------------------------------------- | ------- |
+| TRINO_EXTERNAL_AUTHENTICATION | Enable OAuth/external authentication  | false   |
+| TRINO_ACCESS_TOKEN         | JWT access token for OAuth authentication | (empty) |
+
+### Security and Query Parameters
+
+| Variable               | Description                       | Default   |
+| ---------------------- | --------------------------------- | --------- |
 | TRINO_ALLOW_WRITE_QUERIES | Allow non-read-only SQL queries | false     |
 | TRINO_QUERY_TIMEOUT    | Query timeout in seconds          | 30        |
+
+### MCP Transport Parameters
+
+| Variable               | Description                       | Default   |
+| ---------------------- | --------------------------------- | --------- |
 | MCP_TRANSPORT          | Transport method (stdio/http)     | stdio     |
 | MCP_PORT               | HTTP port for http transport      | 9097      |
 | MCP_HOST               | Host for HTTP callbacks           | localhost |
+
+### Authentication Modes
+
+The server supports two authentication modes:
+
+#### Traditional Authentication (Username/Password)
+This is the default mode using username and password authentication:
+
+```bash
+export TRINO_HOST=localhost
+export TRINO_PORT=8080
+export TRINO_USER=myuser
+export TRINO_PASSWORD=mypassword
+```
+
+#### OAuth Authentication (External Authentication)
+For OAuth/external authentication using JWT tokens:
+
+```bash
+export TRINO_HOST=localhost
+export TRINO_PORT=8080
+export TRINO_EXTERNAL_AUTHENTICATION=true
+export TRINO_ACCESS_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+When OAuth is enabled with a valid access token, the username and password are ignored, and the access token is used for authentication via the `Authorization: Bearer` header.
 
 > **Note**: When `TRINO_SCHEME` is set to "https", `TRINO_SSL` is automatically set to true regardless of the provided value.
 
 > **Important**: The default connection mode is HTTPS. If you're using an HTTP-only Trino server, you must set `TRINO_SCHEME=http` in your environment variables.
 
 > **Security Note**: By default, only read-only queries (SELECT, SHOW, DESCRIBE, EXPLAIN) are allowed to prevent SQL injection. If you need to execute write operations or other non-read queries, set `TRINO_ALLOW_WRITE_QUERIES=true`, but be aware this bypasses this security protection.
+
+> **OAuth Note**: When `TRINO_EXTERNAL_AUTHENTICATION=true` is set but no `TRINO_ACCESS_TOKEN` is provided, the server will log a warning and fall back to traditional username/password authentication.
 
 > **For Cursor Integration**: When using with Cursor, set `MCP_TRANSPORT=http` and connect to the `/sse` endpoint. The server will automatically handle SSE (Server-Sent Events) connections.
 
