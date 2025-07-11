@@ -20,18 +20,38 @@ type Client struct {
 	timeout time.Duration
 }
 
+// buildDSN constructs the DSN string for Trino connection
+// This is extracted as a separate function to enable testing without database connection
+func buildDSN(cfg *config.TrinoConfig) string {
+	if cfg.ExternalAuthentication && cfg.AccessToken != "" {
+		// OAuth/external authentication mode - omit username/password, include accessToken
+		return fmt.Sprintf("%s://%s:%d?catalog=%s&schema=%s&SSL=%t&SSLInsecure=%t&accessToken=%s",
+			cfg.Scheme,
+			cfg.Host,
+			cfg.Port,
+			url.QueryEscape(cfg.Catalog),
+			url.QueryEscape(cfg.Schema),
+			cfg.SSL,
+			cfg.SSLInsecure,
+			url.QueryEscape(cfg.AccessToken))
+	} else {
+		// Traditional username/password authentication
+		return fmt.Sprintf("%s://%s:%s@%s:%d?catalog=%s&schema=%s&SSL=%t&SSLInsecure=%t",
+			cfg.Scheme,
+			url.QueryEscape(cfg.User),
+			url.QueryEscape(cfg.Password),
+			cfg.Host,
+			cfg.Port,
+			url.QueryEscape(cfg.Catalog),
+			url.QueryEscape(cfg.Schema),
+			cfg.SSL,
+			cfg.SSLInsecure)
+	}
+}
+
 // NewClient creates a new Trino client
 func NewClient(cfg *config.TrinoConfig) (*Client, error) {
-	dsn := fmt.Sprintf("%s://%s:%s@%s:%d?catalog=%s&schema=%s&SSL=%t&SSLInsecure=%t",
-		cfg.Scheme,
-		url.QueryEscape(cfg.User),
-		url.QueryEscape(cfg.Password),
-		cfg.Host,
-		cfg.Port,
-		url.QueryEscape(cfg.Catalog),
-		url.QueryEscape(cfg.Schema),
-		cfg.SSL,
-		cfg.SSLInsecure)
+	dsn := buildDSN(cfg)
 
 	// The Trino driver registers itself with database/sql on import
 	// We can just use sql.Open directly with the trino driver
