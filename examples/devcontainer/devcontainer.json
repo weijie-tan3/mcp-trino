@@ -1,0 +1,23 @@
+{
+    "name": "Trino MCP Development",
+    "image": "mcr.microsoft.com/devcontainers/go:1.24",
+    "features": {
+        "ghcr.io/tuannvm/devcontainer-features/trino-mcp-server:1.0.0": {
+            "version": "latest",
+            "trinoHost": "localhost",
+            "trinoPort": "8080",
+            "trinoUser": "trino",
+            "trinoCatalog": "memory",
+            "trinoSchema": "default"
+        }
+    },
+    "forwardPorts": [8080, 9097],
+    "postCreateCommand": "echo 'Trino MCP Server development environment ready!'",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "golang.go"
+            ]
+        }
+    }
+}

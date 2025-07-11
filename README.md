@@ -88,6 +88,35 @@ You can download pre-built binaries for your platform:
 
 Or see all available downloads on the [GitHub Releases](https://github.com/tuannvm/mcp-trino/releases) page.
 
+## VS Code Dev Container
+
+For easy testing and development, you can use the VS Code dev container feature:
+
+### Using the Dev Container Feature
+
+Add the following to your `devcontainer.json`:
+
+```json
+{
+    "name": "Trino MCP Development",
+    "image": "mcr.microsoft.com/devcontainers/go:1.24",
+    "features": {
+        "ghcr.io/tuannvm/devcontainer-features/trino-mcp-server:1.0.0": {
+            "trinoHost": "your-trino-host",
+            "trinoCatalog": "your-catalog"
+        }
+    }
+}
+```
+
+This will automatically:
+- Set up the Go development environment
+- Clone and build the Trino MCP server
+- Configure VS Code with MCP settings
+- Create environment variables for Trino connection
+
+See `examples/devcontainer/` for a complete example configuration.
+
 ### Installation Troubleshooting
 
 If you encounter issues during installation:

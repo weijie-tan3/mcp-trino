@@ -1,0 +1,64 @@
+{
+    "name": "Trino MCP Server",
+    "id": "trino-mcp-server",
+    "version": "1.0.0",
+    "description": "Sets up the environment for the Trino Model Context Protocol server",
+    "options": {
+        "version": {
+            "type": "string",
+            "default": "latest",
+            "description": "Version of the Trino MCP server to install (defaults to latest)"
+        },
+        "trinoHost": {
+            "type": "string",
+            "default": "",
+            "description": "Trino host address (empty by default, must be specified at runtime)"
+        },
+        "trinoPort": {
+            "type": "string",
+            "default": "8080",
+            "description": "Trino port number (defaults to 8080)"
+        },
+        "trinoUser": {
+            "type": "string",
+            "default": "trino",
+            "description": "Trino user name (defaults to trino)"
+        },
+        "trinoCatalog": {
+            "type": "string",
+            "default": "",
+            "description": "Trino catalog name (empty by default, must be specified at runtime)"
+        },
+        "trinoSchema": {
+            "type": "string",
+            "default": "default",
+            "description": "Trino schema name (defaults to default)"
+        },
+        "trinoMcpRepo": {
+            "type": "string",
+            "default": "https://github.com/tuannvm/mcp-trino",
+            "description": "Trino MCP repository URL"
+        }
+    },
+    "dependsOn": {
+        "ghcr.io/devcontainers/features/go:1": {
+            "version": "1.24"
+        }
+    },
+    "postCreateCommand": "cd /opt/trino-mcp-server && go build -o trino-mcp ./cmd",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "mcp": {
+                    "servers": {
+                        "trino-mcp-server": {
+                            "type": "stdio",
+                            "command": "/opt/trino-mcp-server/trino-mcp",
+                            "envFile": "${userHome}/.trino-mcp-env"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
